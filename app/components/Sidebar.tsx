@@ -201,7 +201,7 @@ export default function Sidebar({ role = "admin", isOpen, onToggle }: { role?: "
                               <>
                                 <button
                                   onClick={() => handleToggleDropdown(sub.name)}
-                                  className={`flex items-center justify-between w-full px-2 py-2 text-sm rounded transition ${subActive ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
+                                  className={`flex items-center justify-between w-full px-2 py-2 text-sm transition ${subActive ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-gray-50"}`}
                                 >
                                   <span>{sub.name}</span>
                                   {isDropdownOpen(sub.name) ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -213,7 +213,7 @@ export default function Sidebar({ role = "admin", isOpen, onToggle }: { role?: "
                                     {sub.children.map((child, j) => {
                                       const childActive = pathname === child.path;
                                       return (
-                                        <Link key={j} href={child.path} className={`block w-full text-left px-2 py-2 text-sm rounded transition ${childActive ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-gray-50"}`}>
+                                        <Link key={j} href={child.path} className={`block w-full text-left px-2 py-2 text-sm transition ${childActive ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-gray-50"}`}>
                                           {child.name}
                                         </Link>
                                       );
@@ -222,7 +222,7 @@ export default function Sidebar({ role = "admin", isOpen, onToggle }: { role?: "
                                 )}
                               </>
                             ) : (
-                              <Link href={sub.path} className={`block w-full text-left px-2 py-2 text-sm rounded transition ${subActive ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-gray-50"}`}>
+                              <Link href={sub.path} className={`block w-full text-left px-2 py-2 text-sm transition ${subActive ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-gray-50"}`}>
                                 {sub.name}
                               </Link>
                             )}
@@ -248,7 +248,7 @@ export default function Sidebar({ role = "admin", isOpen, onToggle }: { role?: "
 
       {/* Menu Profile - Sticky di bawah */}
       <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3">
-        <Link href="/profile" className={`flex items-center gap-3 text-sm p-2 rounded-md transition ${pathname === "/profile" ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-sky-50"}`}>
+        <Link href="/profile" className={`flex items-center gap-3 text-sm p-2 transition ${pathname === "/profile" ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-sky-50"}`}>
           <User className="w-6 h-6 shrink-0" />
           {isOpen && <span>Profile - Hadi Ahadi</span>}
         </Link>
