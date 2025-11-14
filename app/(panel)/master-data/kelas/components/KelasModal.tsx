@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { supabase } from "@/lib/supabase/client";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -9,18 +10,17 @@ import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, Command
 import { ChevronsUpDown, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const jurusanList = ["Rekayasa Perangkat Lunak", "Teknik Komputer dan Jaringan", "Multimedia", "Akuntansi dan Keuangan Lembaga"];
-const guruList = ["Budi Santoso", "Siti Aisyah", "Ahmad Fauzan", "Rina Kusuma", "Bayu Setiawan", "Lilis Kurniawati"];
-
 export interface KelasFormData {
-  id: string;
+  id: number | null;
   namaKelas: string;
   tingkat: "X" | "XI" | "XII";
-  jurusan: string;
-  waliKelas: string;
+  jurusanId: number | null;
+  jurusanNama: string;
+  waliId: number | null;
+  waliNama: string;
   jumlahSiswa: number;
   tahunAjaran: string;
-  status: "Aktif" | "Tidak Aktif";
+  status: "ACTIVE" | "INACTIVE";
 }
 
 interface KelasModalProps {
@@ -33,41 +33,62 @@ interface KelasModalProps {
 
 export default function KelasModal({ open, mode, initialData, onClose, onSubmit }: KelasModalProps): React.ReactElement {
   const [form, setForm] = React.useState<KelasFormData>({
-    id: "",
+    id: null,
     namaKelas: "",
     tingkat: "X",
-    jurusan: "",
-    waliKelas: "",
+    jurusanId: null,
+    jurusanNama: "",
+    waliId: null,
+    waliNama: "",
     jumlahSiswa: 0,
     tahunAjaran: "2024/2025",
-    status: "Aktif",
+    status: "ACTIVE",
   });
+
+  const [jurusanList, setJurusanList] = React.useState<{ id: number; nama: string }[]>([]);
+  const [guruList, setGuruList] = React.useState<{ id: number; nama: string }[]>([]);
+
+  const loadJurusan = async () => {
+    const { data } = await supabase.from("jurusan").select("id, nama").order("nama", { ascending: true });
+
+    if (data) setJurusanList(data);
+  };
+
+  const loadGuru = async () => {
+    const { data } = await supabase.from("guru").select("id, nama").order("nama", { ascending: true });
+
+    if (data) setGuruList(data);
+  };
+
+  React.useEffect(() => {
+    if (open) {
+      loadJurusan();
+      loadGuru();
+    }
+  }, [open]);
 
   React.useEffect(() => {
     if (mode === "edit" && initialData) {
       setForm(initialData);
     } else {
       setForm({
-        id: "",
+        id: null,
         namaKelas: "",
         tingkat: "X",
-        jurusan: "",
-        waliKelas: "",
+        jurusanId: null,
+        jurusanNama: "",
+        waliId: null,
+        waliNama: "",
         jumlahSiswa: 0,
         tahunAjaran: "2024/2025",
-        status: "Aktif",
+        status: "ACTIVE",
       });
     }
   }, [mode, initialData]);
 
   const handleSubmit = () => {
     if (!form.namaKelas.trim()) return;
-
-    onSubmit({
-      ...form,
-      id: form.namaKelas.replace(/\s+/g, "-").toLowerCase(),
-      jumlahSiswa: 0,
-    });
+    onSubmit({ ...form });
   };
 
   return (
@@ -78,39 +99,27 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Nama Kelas */}
           <div className="space-y-1">
             <label className="text-sm font-medium">Nama Kelas</label>
             <Input value={form.namaKelas} onChange={(e) => setForm({ ...form, namaKelas: e.target.value })} placeholder="X RPL 1" />
           </div>
 
-          {/* Tingkat */}
           <div className="space-y-1">
             <label className="text-sm font-medium">Tingkat</label>
-            <select
-              className="border rounded-md px-3 py-2 w-full"
-              value={form.tingkat}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  tingkat: e.target.value as "X" | "XI" | "XII",
-                })
-              }
-            >
+            <select className="border rounded-md px-3 py-2 w-full" value={form.tingkat} onChange={(e) => setForm({ ...form, tingkat: e.target.value as "X" | "XI" | "XII" })}>
               <option value="X">X</option>
               <option value="XI">XI</option>
               <option value="XII">XII</option>
             </select>
           </div>
 
-          {/* Jurusan */}
           <div className="space-y-1">
             <label className="text-sm font-medium">Jurusan</label>
 
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
-                  {form.jurusan || "Pilih Jurusan"}
+                  {form.jurusanNama || "Pilih Jurusan"}
                   <ChevronsUpDown className="h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -122,9 +131,18 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
                     <CommandEmpty>Tidak ditemukan</CommandEmpty>
                     <CommandGroup>
                       {jurusanList.map((j) => (
-                        <CommandItem key={j} onSelect={() => setForm({ ...form, jurusan: j })}>
-                          <Check className={cn("mr-2 h-4 w-4", form.jurusan === j ? "opacity-100" : "opacity-0")} />
-                          {j}
+                        <CommandItem
+                          key={j.id}
+                          onSelect={() =>
+                            setForm({
+                              ...form,
+                              jurusanId: j.id,
+                              jurusanNama: j.nama,
+                            })
+                          }
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", form.jurusanId === j.id ? "opacity-100" : "opacity-0")} />
+                          {j.nama}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -134,14 +152,13 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
             </Popover>
           </div>
 
-          {/* Wali Kelas */}
           <div className="space-y-1">
             <label className="text-sm font-medium">Wali Kelas</label>
 
             <Popover>
               <PopoverTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
-                  {form.waliKelas || "Pilih Wali Kelas"}
+                  {form.waliNama || "Pilih Wali Kelas"}
                   <ChevronsUpDown className="h-4 w-4 opacity-50" />
                 </Button>
               </PopoverTrigger>
@@ -153,9 +170,18 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
                     <CommandEmpty>Tidak ditemukan</CommandEmpty>
                     <CommandGroup>
                       {guruList.map((g) => (
-                        <CommandItem key={g} onSelect={() => setForm({ ...form, waliKelas: g })}>
-                          <Check className={cn("mr-2 h-4 w-4", form.waliKelas === g ? "opacity-100" : "opacity-0")} />
-                          {g}
+                        <CommandItem
+                          key={g.id}
+                          onSelect={() =>
+                            setForm({
+                              ...form,
+                              waliId: g.id,
+                              waliNama: g.nama,
+                            })
+                          }
+                        >
+                          <Check className={cn("mr-2 h-4 w-4", form.waliId === g.id ? "opacity-100" : "opacity-0")} />
+                          {g.nama}
                         </CommandItem>
                       ))}
                     </CommandGroup>
@@ -165,21 +191,29 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
             </Popover>
           </div>
 
-          {/* Tahun Ajaran */}
           <div className="space-y-1">
             <label className="text-sm font-medium">Tahun Ajaran</label>
+
             <select className="border rounded-md px-3 py-2 w-full" value={form.tahunAjaran} onChange={(e) => setForm({ ...form, tahunAjaran: e.target.value })}>
               <option value="2024/2025">2024/2025</option>
               <option value="2025/2026">2025/2026</option>
             </select>
           </div>
 
-          {/* Status */}
           <div className="space-y-1">
             <label className="text-sm font-medium">Status</label>
-            <select className="border rounded-md px-3 py-2 w-full" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as "Aktif" | "Tidak Aktif" })}>
-              <option value="Aktif">Aktif</option>
-              <option value="Tidak Aktif">Tidak Aktif</option>
+            <select
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.status}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  status: e.target.value as "ACTIVE" | "INACTIVE",
+                })
+              }
+            >
+              <option value="ACTIVE">Aktif</option>
+              <option value="INACTIVE">Tidak Aktif</option>
             </select>
           </div>
         </div>
