@@ -4,31 +4,18 @@ import * as React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Popover, PopoverTrigger, PopoverContent } from "@/components/ui/popover";
-import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from "@/components/ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
-import { cn } from "@/lib/utils";
 
-// =====================
-// Dummy data Jurusan SMK
-// =====================
-const jurusanList = ["RPL", "TKJ", "MM", "AKL"];
-
-// =====================
-// TIPE DATA
-// =====================
 export interface MapelFormData {
-  id: string;
+  id: number | null;
   kode: string;
   nama: string;
-  kategori: "Umum" | "C1" | "C2" | "C3";
+  kategori: "NORMATIF" | "ADAPTIF" | "PRODUKTIF" | "MUATAN_LOKAL" | "LAINNYA";
   tingkat: "X" | "XI" | "XII";
-  jurusan: string[];
   jp: number;
   status: "Aktif" | "Tidak Aktif";
 }
 
-interface MapelModalProps {
+interface Props {
   open: boolean;
   mode: "add" | "edit";
   initialData?: MapelFormData;
@@ -36,118 +23,120 @@ interface MapelModalProps {
   onSubmit: (data: MapelFormData) => void;
 }
 
-// =====================
-// COMPONENT
-// =====================
-export default function MataPelajaranModal({ open, mode, initialData, onClose, onSubmit }: MapelModalProps) {
+export default function MataPelajaranModal({ open, mode, initialData, onClose, onSubmit }: Props) {
+  const [errorNama, setErrorNama] = React.useState("");
+  const [errorKode, setErrorKode] = React.useState("");
+
   const [form, setForm] = React.useState<MapelFormData>({
-    id: "",
+    id: null,
     kode: "",
     nama: "",
-    kategori: "Umum",
+    kategori: "NORMATIF",
     tingkat: "X",
-    jurusan: [],
     jp: 2,
     status: "Aktif",
   });
 
   React.useEffect(() => {
-    if (mode === "edit" && initialData) {
+    if (open && mode === "edit" && initialData) {
       setForm(initialData);
-    } else {
+      return;
+    }
+
+    if (open && mode === "add") {
       setForm({
-        id: "",
+        id: null,
         kode: "",
         nama: "",
-        kategori: "Umum",
+        kategori: "NORMATIF",
         tingkat: "X",
-        jurusan: [],
         jp: 2,
         status: "Aktif",
       });
     }
-  }, [mode, initialData]);
-
-  // Auto-generate KODE MAPEL
-  React.useEffect(() => {
-    if (!form.nama.trim()) return;
-
-    const sanitized = form.nama.toUpperCase().replace(/[^A-Z0-9]/g, "-");
-
-    setForm((prev) => ({
-      ...prev,
-      kode: `${sanitized}-${form.kategori}`,
-    }));
-  }, [form.nama, form.kategori]);
-
-  const toggleJurusan = (j: string) => {
-    setForm((prev) => ({
-      ...prev,
-      jurusan: prev.jurusan.includes(j) ? prev.jurusan.filter((x) => x !== j) : [...prev.jurusan, j],
-    }));
-  };
+  }, [open, mode, initialData]);
 
   const handleSubmit = () => {
-    if (!form.nama.trim() || form.jurusan.length === 0) return;
-
-    const data: MapelFormData = {
-      ...form,
-      id: form.kode.toLowerCase(),
-    };
-
-    onSubmit(data);
+    let valid = true;
+    if (!form.nama.trim()) {
+      setErrorNama("Nama wajib diisi");
+      valid = false;
+    } else {
+      setErrorNama("");
+    }
+    if (!form.kode.trim()) {
+      setErrorKode("Kode mapel wajib diisi");
+      valid = false;
+    } else {
+      setErrorKode("");
+    }
+    if (!valid) return;
+    onSubmit(form);
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle className="text-lg font-semibold">{mode === "add" ? "Tambah Mata Pelajaran" : "Edit Mata Pelajaran"}</DialogTitle>
+          <DialogTitle>{mode === "add" ? "Tambah Mata Pelajaran" : "Edit Mata Pelajaran"}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Nama */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Nama Mata Pelajaran</label>
-            <Input value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} placeholder="Pemrograman Web" />
+          <div>
+            <label className="text-sm font-medium">Nama</label>
+            <Input
+              value={form.nama}
+              onChange={(e) => {
+                setForm({ ...form, nama: e.target.value });
+                if (e.target.value.trim()) setErrorNama("");
+              }}
+              className={errorNama ? "border-red-500" : ""}
+            />
+            {errorNama && <p className="text-red-500 text-xs mt-1">{errorNama}</p>}
           </div>
 
-          {/* KODE */}
-          <div className="space-y-1">
+          <div>
             <label className="text-sm font-medium">Kode Mapel</label>
-            <Input value={form.kode} readOnly className="bg-gray-100" />
+            <Input
+              value={form.kode}
+              onChange={(e) => {
+                setForm({ ...form, kode: e.target.value });
+                if (e.target.value.trim()) setErrorKode("");
+              }}
+              className={errorKode ? "border-red-500" : ""}
+            />
+            {errorKode && <p className="text-red-500 text-xs mt-1">{errorKode}</p>}
           </div>
 
-          {/* KATEGORI */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Kategori</label>
+          <div>
+            <label>Kategori</label>
             <select
               className="border rounded-md px-3 py-2 w-full"
               value={form.kategori}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  kategori: e.target.value as "Umum" | "C1" | "C2" | "C3",
+                  kategori: e.target.value as MapelFormData["kategori"],
                 })
               }
             >
-              <option value="Umum">Umum</option>
-              <option value="C1">C1 (Dasar Program Keahlian)</option>
-              <option value="C2">C2 (Kompetensi Keahlian)</option>
-              <option value="C3">C3 (Paket Keahlian)</option>
+              <option value="NORMATIF">Normatif</option>
+              <option value="ADAPTIF">Adaptif</option>
+              <option value="PRODUKTIF">Produktif</option>
+              <option value="MUATAN_LOKAL">Muatan Lokal</option>
+              <option value="LAINNYA">Lainnya</option>
             </select>
           </div>
 
-          {/* TINGKAT */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Tingkat</label>
+          <div>
+            <label>Tingkat</label>
             <select
-              className="border px-3 py-2 rounded-md w-full"
+              className="border rounded-md px-3 py-2 w-full"
               value={form.tingkat}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  tingkat: e.target.value as "X" | "XI" | "XII",
+                  tingkat: e.target.value as MapelFormData["tingkat"],
                 })
               }
             >
@@ -157,53 +146,20 @@ export default function MataPelajaranModal({ open, mode, initialData, onClose, o
             </select>
           </div>
 
-          {/* JURUSAN MULTI SELECT */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Jurusan</label>
-
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  {form.jurusan.length > 0 ? form.jurusan.join(", ") : "Pilih Jurusan (multi select)"}
-                  <ChevronsUpDown className="w-4 h-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
-
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Cari jurusan..." />
-                  <CommandList>
-                    <CommandEmpty>Tidak ditemukan</CommandEmpty>
-                    <CommandGroup>
-                      {jurusanList.map((j) => (
-                        <CommandItem key={j} onSelect={() => toggleJurusan(j)}>
-                          <Check className={cn("mr-2 h-4 w-4", form.jurusan.includes(j) ? "opacity-100" : "opacity-0")} />
-                          {j}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+          <div>
+            <label>JP / Minggu</label>
+            <Input type="number" value={form.jp} onChange={(e) => setForm({ ...form, jp: Number(e.target.value) })} />
           </div>
 
-          {/* JP */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium">JP / Minggu</label>
-            <Input type="number" value={form.jp} onChange={(e) => setForm({ ...form, jp: Number(e.target.value) })} placeholder="6" />
-          </div>
-
-          {/* STATUS */}
-          <div className="space-y-1">
-            <label className="text-sm font-medium">Status</label>
+          <div>
+            <label>Status</label>
             <select
               className="border rounded-md px-3 py-2 w-full"
               value={form.status}
               onChange={(e) =>
                 setForm({
                   ...form,
-                  status: e.target.value as "Aktif" | "Tidak Aktif",
+                  status: e.target.value as MapelFormData["status"],
                 })
               }
             >
@@ -217,7 +173,7 @@ export default function MataPelajaranModal({ open, mode, initialData, onClose, o
           <Button variant="outline" onClick={onClose}>
             Batal
           </Button>
-          <Button className="bg-sky-600 text-white hover:bg-sky-700" onClick={handleSubmit}>
+          <Button className="bg-sky-600 text-white" onClick={handleSubmit}>
             {mode === "add" ? "Tambah" : "Simpan"}
           </Button>
         </DialogFooter>

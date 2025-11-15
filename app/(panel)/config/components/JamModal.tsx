@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export interface JamFormData {
-  id: string;
-  nama: string; // contoh: J-1
+  id: number | null;
+  nama: string;
   jamMulai: string;
   jamSelesai: string;
   status: "Aktif" | "Tidak Aktif";
@@ -18,28 +18,28 @@ interface JamModalProps {
   open: boolean;
   mode: "add" | "edit";
   initialData?: JamFormData;
-  existingCount?: number; // jumlah jam eksisting → untuk auto generate
+  existingCount?: number;
   onClose: () => void;
   onSubmit: (data: JamFormData) => void;
 }
 
 export default function JamModal({ open, mode, initialData, existingCount = 0, onClose, onSubmit }: JamModalProps) {
   const [form, setForm] = React.useState<JamFormData>({
-    id: "",
+    id: null,
     nama: "",
     jamMulai: "",
     jamSelesai: "",
     status: "Aktif",
   });
 
-  // Sync data edit / reset add
+  // SYNC EDIT / RESET ADD
   React.useEffect(() => {
     if (mode === "edit" && initialData) {
       setForm(initialData);
     } else {
       setForm({
-        id: "",
-        nama: `J-${existingCount + 1}`, // AUTO: J-1, J-2, dst
+        id: null,
+        nama: `J-${existingCount + 1}`,
         jamMulai: "",
         jamSelesai: "",
         status: "Aktif",
@@ -50,12 +50,11 @@ export default function JamModal({ open, mode, initialData, existingCount = 0, o
   const handleSubmit = () => {
     if (!form.nama || !form.jamMulai || !form.jamSelesai) return;
 
-    const data: JamFormData = {
-      ...form,
-      id: form.id || crypto.randomUUID(),
+    const payload: JamFormData = {
+      ...form, // id = null ketika add, angka ketika edit
     };
 
-    onSubmit(data);
+    onSubmit(payload);
   };
 
   return (
@@ -103,7 +102,7 @@ export default function JamModal({ open, mode, initialData, existingCount = 0, o
           <Button variant="outline" onClick={onClose}>
             Batal
           </Button>
-          <Button className="bg-sky-600 hover:bg-sky-700 text-white" onClick={handleSubmit}>
+          <Button className="bg-sky-600 text-white" onClick={handleSubmit}>
             {mode === "add" ? "Tambah" : "Simpan"}
           </Button>
         </DialogFooter>

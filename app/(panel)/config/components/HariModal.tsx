@@ -7,9 +7,8 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { Button } from "@/components/ui/button";
 
 export interface HariFormData {
-  id: string;
+  id: number | null;
   namaHari: string;
-  urutan: number;
   status: "Aktif" | "Tidak Aktif";
 }
 
@@ -23,9 +22,8 @@ interface HariModalProps {
 
 export default function HariModal({ open, mode, initialData, onClose, onSubmit }: HariModalProps) {
   const [form, setForm] = React.useState<HariFormData>({
-    id: "",
+    id: null,
     namaHari: "",
-    urutan: 1,
     status: "Aktif",
   });
 
@@ -34,9 +32,8 @@ export default function HariModal({ open, mode, initialData, onClose, onSubmit }
       setForm(initialData);
     } else {
       setForm({
-        id: "",
+        id: null,
         namaHari: "",
-        urutan: 1,
         status: "Aktif",
       });
     }
@@ -44,13 +41,7 @@ export default function HariModal({ open, mode, initialData, onClose, onSubmit }
 
   const handleSubmit = () => {
     if (!form.namaHari.trim()) return;
-
-    const data: HariFormData = {
-      ...form,
-      id: form.namaHari.toLowerCase(),
-    };
-
-    onSubmit(data);
+    onSubmit(form);
   };
 
   return (
@@ -61,19 +52,11 @@ export default function HariModal({ open, mode, initialData, onClose, onSubmit }
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Nama Hari */}
           <div>
             <label className="text-sm font-medium">Nama Hari</label>
-            <Input placeholder="Contoh: Senin" value={form.namaHari} onChange={(e) => setForm({ ...form, namaHari: e.target.value })} />
+            <Input placeholder="Senin" value={form.namaHari} onChange={(e) => setForm({ ...form, namaHari: e.target.value })} />
           </div>
 
-          {/* Urutan Hari */}
-          <div>
-            <label className="text-sm font-medium">Urutan Hari (1–7)</label>
-            <Input type="number" min={1} max={7} placeholder="Contoh: 1" value={form.urutan} onChange={(e) => setForm({ ...form, urutan: Number(e.target.value) })} />
-          </div>
-
-          {/* STATUS */}
           <div>
             <label className="text-sm font-medium">Status</label>
             <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as "Aktif" | "Tidak Aktif" })}>
@@ -92,8 +75,7 @@ export default function HariModal({ open, mode, initialData, onClose, onSubmit }
           <Button variant="outline" onClick={onClose}>
             Batal
           </Button>
-
-          <Button className="bg-sky-600 hover:bg-sky-700 text-white" onClick={handleSubmit}>
+          <Button className="bg-sky-600 text-white" onClick={handleSubmit}>
             {mode === "add" ? "Tambah" : "Simpan"}
           </Button>
         </DialogFooter>

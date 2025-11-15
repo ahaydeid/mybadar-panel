@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 
 export interface SemesterFormData {
-  id: string;
+  id: number | null;
   namaSemester: string;
   tahunAjaran: string;
   jenis: "Ganjil" | "Genap";
@@ -24,7 +24,7 @@ interface Props {
 
 export default function SemesterModal({ open, mode, initialData, onClose, onSubmit }: Props) {
   const [form, setForm] = React.useState<SemesterFormData>({
-    id: "",
+    id: null,
     namaSemester: "",
     tahunAjaran: "",
     jenis: "Ganjil",
@@ -36,7 +36,7 @@ export default function SemesterModal({ open, mode, initialData, onClose, onSubm
       setForm(initialData);
     } else {
       setForm({
-        id: "",
+        id: null,
         namaSemester: "",
         tahunAjaran: "",
         jenis: "Ganjil",
@@ -48,10 +48,7 @@ export default function SemesterModal({ open, mode, initialData, onClose, onSubm
   const handleSubmit = () => {
     if (!form.namaSemester.trim() || !form.tahunAjaran.trim()) return;
 
-    onSubmit({
-      ...form,
-      id: form.id || crypto.randomUUID(),
-    });
+    onSubmit(form);
   };
 
   return (
@@ -62,24 +59,24 @@ export default function SemesterModal({ open, mode, initialData, onClose, onSubm
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Nama Semester */}
+          {/* Nama */}
           <div>
             <label className="text-sm font-medium">Nama Semester</label>
-            <Input value={form.namaSemester} onChange={(e) => setForm({ ...form, namaSemester: e.target.value })} placeholder="Contoh: Semester Ganjil" />
+            <Input value={form.namaSemester} onChange={(e) => setForm({ ...form, namaSemester: e.target.value })} placeholder="Semester Ganjil" />
           </div>
 
-          {/* Tahun Ajaran */}
+          {/* Tahun */}
           <div>
             <label className="text-sm font-medium">Tahun Ajaran</label>
-            <Input value={form.tahunAjaran} onChange={(e) => setForm({ ...form, tahunAjaran: e.target.value })} placeholder="Contoh: 2024/2025" />
+            <Input value={form.tahunAjaran} onChange={(e) => setForm({ ...form, tahunAjaran: e.target.value })} placeholder="2024/2025" />
           </div>
 
           {/* Jenis */}
           <div>
-            <label className="text-sm font-medium">Jenis Semester</label>
+            <label className="text-sm font-medium">Jenis</label>
             <Select value={form.jenis} onValueChange={(v) => setForm({ ...form, jenis: v as "Ganjil" | "Genap" })}>
               <SelectTrigger>
-                <SelectValue placeholder="Pilih jenis" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Ganjil">Ganjil</SelectItem>
@@ -93,7 +90,7 @@ export default function SemesterModal({ open, mode, initialData, onClose, onSubm
             <label className="text-sm font-medium">Status</label>
             <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as "Aktif" | "Tidak Aktif" })}>
               <SelectTrigger>
-                <SelectValue placeholder="Pilih status" />
+                <SelectValue />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Aktif">Aktif</SelectItem>
@@ -107,7 +104,7 @@ export default function SemesterModal({ open, mode, initialData, onClose, onSubm
           <Button variant="outline" onClick={onClose}>
             Batal
           </Button>
-          <Button className="bg-sky-600 hover:bg-sky-700 text-white" onClick={handleSubmit}>
+          <Button className="bg-sky-600 text-white" onClick={handleSubmit}>
             {mode === "add" ? "Tambah" : "Simpan"}
           </Button>
         </DialogFooter>
