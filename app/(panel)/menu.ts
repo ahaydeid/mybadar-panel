@@ -29,7 +29,7 @@ export const panelMenu: MenuItem[] = [
 
   // Rekap Absen
   {
-    name: "Rekap Absen",
+    name: "Rekap Absensi",
     icon: ClipboardCheck,
     path: "/rekap-absen",
     children: [
