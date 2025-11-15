@@ -17,25 +17,13 @@ export const panelMenu: MenuItem[] = [
 
   // Absensi
   {
-    name: "Absensi",
+    name: "Log Absensi",
     icon: ClipboardCheck,
     path: "/absensi",
     children: [
       { name: "Guru", path: "/absensi/guru" },
       { name: "Siswa", path: "/absensi/siswa" },
       { name: "Staff", path: "/absensi/staff" },
-    ],
-  },
-
-  // Rekap Absen
-  {
-    name: "Rekap Absensi",
-    icon: ClipboardCheck,
-    path: "/rekap-absen",
-    children: [
-      { name: "Guru", path: "/rekap-absen/guru" },
-      { name: "Siswa", path: "/rekap-absen/siswa" },
-      { name: "Staff", path: "/rekap-absen/staff" },
     ],
   },
 
@@ -85,15 +73,15 @@ export const panelMenu: MenuItem[] = [
       { name: "Sidang PKL", path: "/pkl/sidang" },
       { name: "Laporan", path: "/pkl/laporan" },
       { name: "Riwayat", path: "/pkl/riwayat" },
-      { name: "Rekap PKL", path: "/rekap-pkl" },
+      { name: "Rekap PKL", path: "/pkl/rekap-pkl" },
     ],
   },
 
   // Modul
-  { name: "Modul", icon: FileText, path: "/modul" },
+  { name: "Agenda Ajar", icon: FileText, path: "/agenda" },
 
   // Export
-  { name: "Export", icon: FileSpreadsheet, path: "/export" },
+  { name: "Export Laporan", icon: FileSpreadsheet, path: "/export" },
 
   // Tiket bantuan
   { name: "Tiket Bantuan", icon: LifeBuoy, path: "/tiket-bantuan" },

@@ -108,7 +108,7 @@ export default function ImportSiswaModal({ open, onClose, onImported }: Props) {
 
           <div className="space-y-4 py-3">
             {/* FILE UPLOADER */}
-            <label htmlFor="excel-file" className="w-full border border-dashed border-sky-400 rounded p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-sky-50 transition">
+            <label htmlFor="excel-file" className="w-full border-2 border-dashed border-sky-400 rounded p-6 flex flex-col items-center justify-center cursor-pointer hover:bg-sky-50 transition">
               <p className="text-sky-700 font-medium">Klik untuk memilih file Excel</p>
               <p className="text-xs text-gray-500 mt-1">Format: .xlsx</p>
             </label>

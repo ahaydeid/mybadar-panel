@@ -15,15 +15,17 @@ type SupabaseMapel = {
   tingkat: number;
   jp_per_minggu: number;
   status: "ACTIVE" | "INACTIVE";
+  warna_hex: string;
 };
 
 type MataPelajaran = {
   no: number;
   kode: string;
   nama: string;
-  kategori: "NORMATIF" | "ADAPTIF" | "PRODUKTIF" | "MUATAN_LOKAL" | "LAINNYA";
+  kategori: SupabaseMapel["kategori"];
   tingkat: "X" | "XI" | "XII";
   jp: number;
+  warna: string;
   status: "Aktif" | "Tidak Aktif";
 };
 
@@ -40,9 +42,9 @@ export default function MasterMapelPage() {
   const loadMapel = React.useCallback(async () => {
     setLoading(true);
 
-    const { data } = await supabase.from("mata_pelajaran").select("id, kode_mapel, nama, kategori, tingkat, jp_per_minggu, status").order("id", { ascending: true });
+    const { data } = await supabase.from("mata_pelajaran").select("id, kode_mapel, nama, kategori, tingkat, jp_per_minggu, status, warna_hex").order("id", { ascending: true });
 
-    const rows: SupabaseMapel[] = (data ?? []) as SupabaseMapel[];
+    const rows: SupabaseMapel[] = data ?? [];
 
     setDataMapel(
       rows.map((m) => ({
@@ -52,6 +54,7 @@ export default function MasterMapelPage() {
         kategori: m.kategori,
         tingkat: m.tingkat === 10 ? "X" : m.tingkat === 11 ? "XI" : "XII",
         jp: m.jp_per_minggu,
+        warna: m.warna_hex,
         status: m.status === "ACTIVE" ? "Aktif" : "Tidak Aktif",
       }))
     );
@@ -71,7 +74,9 @@ export default function MasterMapelPage() {
   const paginated = filtered.slice(startIndex, startIndex + rowsPerPage);
 
   const handleSave = async (data: MapelFormData) => {
+    // PERBAIKAN DILAKUKAN DI SINI: Mengubah perbandingan angka (11) menjadi string ("XI")
     const tingkatValue = data.tingkat === "X" ? 10 : data.tingkat === "XI" ? 11 : 12;
+
     const statusDb = data.status === "Aktif" ? "ACTIVE" : "INACTIVE";
 
     if (selectedMapel) {
@@ -83,6 +88,7 @@ export default function MasterMapelPage() {
           kategori: data.kategori,
           tingkat: tingkatValue,
           jp_per_minggu: data.jp,
+          warna_hex: data.warna,
           status: statusDb,
         })
         .eq("id", selectedMapel.id);
@@ -93,6 +99,7 @@ export default function MasterMapelPage() {
         kategori: data.kategori,
         tingkat: tingkatValue,
         jp_per_minggu: data.jp,
+        warna_hex: data.warna,
         status: statusDb,
       });
     }
@@ -103,7 +110,7 @@ export default function MasterMapelPage() {
   };
 
   const handleDelete = async (id: number) => {
-    const { error } = await supabase.from("mata_pelajaran").delete().eq("id", id).select("*"); // penting agar error FK muncul
+    const { error } = await supabase.from("mata_pelajaran").delete().eq("id", id).select("*");
 
     if (error) {
       alert("Tidak bisa menghapus karena data sedang digunakan.");
@@ -150,6 +157,7 @@ export default function MasterMapelPage() {
                 <th className="p-3">Kategori</th>
                 <th className="p-3">Tingkat</th>
                 <th className="p-3">JP</th>
+                <th className="p-3">Kode Warna</th>
                 <th className="p-3">Status</th>
                 <th className="p-3 text-center">Aksi</th>
               </tr>
@@ -158,7 +166,7 @@ export default function MasterMapelPage() {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan={8} className="p-6 text-center text-gray-500">
+                  <td colSpan={9} className="p-6 text-center text-gray-500">
                     Memuat data...
                   </td>
                 </tr>
@@ -173,12 +181,19 @@ export default function MasterMapelPage() {
                     <td className="p-3">{m.kategori}</td>
                     <td className="p-3">{m.tingkat}</td>
                     <td className="p-3">{m.jp}</td>
+
+                    <td className="p-3">
+                      <span className="px-3 py-1 rounded text-xs border" style={{ background: m.warna }}>
+                        {m.warna}
+                      </span>
+                    </td>
+
                     <td className="p-3">{m.status}</td>
 
                     <td className="p-3">
                       <div className="flex justify-center gap-2">
                         <button
-                          className="px-3 py-1 bg-amber-500 text-white text-xs rounded-md flex items-center gap-1"
+                          className="px-3 py-2 bg-amber-500 text-white text-xs rounded-md flex items-center gap-1"
                           onClick={() => {
                             setSelectedMapel({
                               id: m.no,
@@ -187,6 +202,7 @@ export default function MasterMapelPage() {
                               kategori: m.kategori,
                               tingkat: m.tingkat,
                               jp: m.jp,
+                              warna: m.warna,
                               status: m.status,
                             });
                             setModalOpen(true);
@@ -195,7 +211,7 @@ export default function MasterMapelPage() {
                           <Pencil className="w-4 h-4" /> Edit
                         </button>
 
-                        <button className="px-3 py-1 bg-rose-500 text-white text-xs rounded-md flex items-center gap-1" onClick={() => handleDelete(m.no)}>
+                        <button className="px-3 py-2 bg-rose-500 text-white text-xs rounded-md flex items-center gap-1" onClick={() => handleDelete(m.no)}>
                           <Trash2 className="w-4 h-4" /> Hapus
                         </button>
                       </div>

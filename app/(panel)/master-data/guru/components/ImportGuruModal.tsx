@@ -5,7 +5,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button";
 import * as XLSX from "xlsx";
 import { supabase } from "@/lib/supabase/client";
-import { UploadCloud } from "lucide-react";
 
 type Props = {
   open: boolean;
@@ -93,8 +92,7 @@ export default function ImportGuruModal({ open, onClose, onImported }: Props) {
           </DialogHeader>
 
           {/* UPLOAD AREA */}
-          <label htmlFor="guru-file-upload" className="mt-2 border-2 border-dashed border-sky-400 bg-sky-50 hover:bg-sky-100 transition cursor-pointer rounded-lg p-6 flex flex-col items-center text-center">
-            <UploadCloud className="w-10 h-10 text-sky-600 mb-2" />
+          <label htmlFor="guru-file-upload" className="mt-2 border-2 border-dashed border-sky-400 bg-sky-50 hover:bg-sky-100 transition cursor-pointer rounded p-6 flex flex-col items-center text-center">
             <p className="text-sky-700 font-medium">Klik untuk memilih file Excel</p>
             <p className="text-gray-500 text-sm">Format: .xlsx</p>
 
