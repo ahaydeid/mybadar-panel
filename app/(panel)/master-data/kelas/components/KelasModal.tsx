@@ -45,8 +45,11 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
     status: "ACTIVE",
   });
 
+  const [errors, setErrors] = React.useState<{ [key: string]: string }>({});
+
   const [jurusanList, setJurusanList] = React.useState<{ id: number; nama: string }[]>([]);
   const [guruList, setGuruList] = React.useState<{ id: number; nama: string }[]>([]);
+  const [tahunList, setTahunList] = React.useState<string[]>([]);
 
   const loadJurusan = async () => {
     const { data } = await supabase.from("jurusan").select("id, nama").order("nama", { ascending: true });
@@ -60,10 +63,20 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
     if (data) setGuruList(data);
   };
 
+  const loadTahunAjaran = async () => {
+    const { data } = await supabase.from("semester").select("tahun_ajaran").order("tahun_ajaran", { ascending: false });
+
+    if (data) {
+      const unique = Array.from(new Set(data.map((d) => d.tahun_ajaran)));
+      setTahunList(unique);
+    }
+  };
+
   React.useEffect(() => {
     if (open) {
       loadJurusan();
       loadGuru();
+      loadTahunAjaran();
     }
   }, [open]);
 
@@ -86,8 +99,21 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
     }
   }, [mode, initialData]);
 
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!form.namaKelas.trim()) newErrors.namaKelas = "Nama kelas wajib diisi.";
+    if (!form.tingkat) newErrors.tingkat = "Tingkat wajib dipilih.";
+    if (!form.jurusanId) newErrors.jurusanId = "Jurusan wajib dipilih.";
+    if (!form.tahunAjaran.trim()) newErrors.tahunAjaran = "Tahun ajaran wajib dipilih.";
+    if (!form.status) newErrors.status = "Status wajib dipilih.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = () => {
-    if (!form.namaKelas.trim()) return;
+    if (!validate()) return;
     onSubmit({ ...form });
   };
 
@@ -102,54 +128,47 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
           <div className="space-y-1">
             <label className="text-sm font-medium">Nama Kelas</label>
             <Input value={form.namaKelas} onChange={(e) => setForm({ ...form, namaKelas: e.target.value })} placeholder="X RPL 1" />
+            {errors.namaKelas && <p className="text-red-500 text-xs">{errors.namaKelas}</p>}
           </div>
 
           <div className="space-y-1">
+            <label className="text-sm font-medium">Tingkat</label>
             <label className="text-sm font-medium">Tingkat</label>
             <select className="border rounded-md px-3 py-2 w-full" value={form.tingkat} onChange={(e) => setForm({ ...form, tingkat: e.target.value as "X" | "XI" | "XII" })}>
               <option value="X">X</option>
               <option value="XI">XI</option>
               <option value="XII">XII</option>
             </select>
+            {errors.tingkat && <p className="text-red-500 text-xs">{errors.tingkat}</p>}
           </div>
 
           <div className="space-y-1">
             <label className="text-sm font-medium">Jurusan</label>
 
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-full justify-between">
-                  {form.jurusanNama || "Pilih Jurusan"}
-                  <ChevronsUpDown className="h-4 w-4 opacity-50" />
-                </Button>
-              </PopoverTrigger>
+            <select
+              className="border rounded-md px-3 py-2 w-full"
+              value={form.jurusanId ?? ""}
+              onChange={(e) => {
+                const selectedId = Number(e.target.value);
+                const selectedNama = jurusanList.find((j) => j.id === selectedId)?.nama || "";
 
-              <PopoverContent className="w-full p-0">
-                <Command>
-                  <CommandInput placeholder="Cari jurusan..." />
-                  <CommandList>
-                    <CommandEmpty>Tidak ditemukan</CommandEmpty>
-                    <CommandGroup>
-                      {jurusanList.map((j) => (
-                        <CommandItem
-                          key={j.id}
-                          onSelect={() =>
-                            setForm({
-                              ...form,
-                              jurusanId: j.id,
-                              jurusanNama: j.nama,
-                            })
-                          }
-                        >
-                          <Check className={cn("mr-2 h-4 w-4", form.jurusanId === j.id ? "opacity-100" : "opacity-0")} />
-                          {j.nama}
-                        </CommandItem>
-                      ))}
-                    </CommandGroup>
-                  </CommandList>
-                </Command>
-              </PopoverContent>
-            </Popover>
+                setForm({
+                  ...form,
+                  jurusanId: selectedId,
+                  jurusanNama: selectedNama,
+                });
+              }}
+            >
+              <option value="">Pilih Jurusan</option>
+
+              {jurusanList.map((j) => (
+                <option key={j.id} value={j.id}>
+                  {j.nama}
+                </option>
+              ))}
+            </select>
+
+            {errors.jurusanId && <p className="text-red-500 text-xs">{errors.jurusanId}</p>}
           </div>
 
           <div className="space-y-1">
@@ -195,9 +214,15 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
             <label className="text-sm font-medium">Tahun Ajaran</label>
 
             <select className="border rounded-md px-3 py-2 w-full" value={form.tahunAjaran} onChange={(e) => setForm({ ...form, tahunAjaran: e.target.value })}>
-              <option value="2024/2025">2024/2025</option>
-              <option value="2025/2026">2025/2026</option>
+              <option value="">Pilih Tahun Ajaran</option>
+
+              {tahunList.map((tahun) => (
+                <option key={tahun} value={tahun}>
+                  {tahun}
+                </option>
+              ))}
             </select>
+            {errors.tahunAjaran && <p className="text-red-500 text-xs">{errors.tahunAjaran}</p>}
           </div>
 
           <div className="space-y-1">
@@ -215,6 +240,7 @@ export default function KelasModal({ open, mode, initialData, onClose, onSubmit 
               <option value="ACTIVE">Aktif</option>
               <option value="INACTIVE">Tidak Aktif</option>
             </select>
+            {errors.status && <p className="text-red-500 text-xs">{errors.status}</p>}
           </div>
         </div>
 

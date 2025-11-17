@@ -7,6 +7,13 @@ import HariModal, { HariFormData } from "@/app/(panel)/config/components/HariMod
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
+// MODAL TAMBAHAN
+import ConfirmDeleteModal from "@/app/components/ConfirmDeleteModal";
+import SuccessDeleteModal from "@/app/components/SuccessDeleteModal";
+import SuccessAddModal from "@/app/components/SuccessAddModal";
+import SuccessSaveModal from "@/app/components/SuccessSaveModal";
+import ErrorAddModal from "@/app/components/ErrorAddModal";
+
 type Hari = {
   id: number;
   namaHari: string;
@@ -24,16 +31,25 @@ export default function ConfigHariPage() {
   const [modalMode, setModalMode] = React.useState<"add" | "edit">("add");
   const [selectedHari, setSelectedHari] = React.useState<HariFormData | undefined>(undefined);
 
+  // MODAL STATES
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
+  const [successDeleteOpen, setSuccessDeleteOpen] = React.useState(false);
+  const [successAddOpen, setSuccessAddOpen] = React.useState(false);
+  const [successSaveOpen, setSuccessSaveOpen] = React.useState(false);
+  const [errorAddOpen, setErrorAddOpen] = React.useState(false);
+
+  const [deleteId, setDeleteId] = React.useState<number | null>(null);
+
   const [page, setPage] = React.useState(1);
   const rowsPerPage = 10;
 
   // =====================================================
-  // LOAD DATA FROM DB
+  // LOAD DATA
   // =====================================================
   const loadHari = React.useCallback(async () => {
     setLoading(true);
 
-    const { data, error } = await supabase.from("hari").select("id, nama").order("id", { ascending: true });
+    const { data, error } = await supabase.from("hari").select("id, nama, status").order("id", { ascending: true });
 
     if (error) {
       console.error("Error load hari:", error);
@@ -41,11 +57,12 @@ export default function ConfigHariPage() {
       return;
     }
 
-    const mapped: Hari[] = (data ?? []).map((item) => ({
-      id: item.id,
-      namaHari: item.nama,
-      status: "Aktif", // kalau nanti ada field status tinggal ganti
-    }));
+    const mapped: Hari[] =
+      (data ?? []).map((item) => ({
+        id: item.id,
+        namaHari: item.nama,
+        status: item.status ? "Aktif" : "Tidak Aktif",
+      })) ?? [];
 
     setHariData(mapped);
     setLoading(false);
@@ -55,9 +72,7 @@ export default function ConfigHariPage() {
     loadHari();
   }, [loadHari]);
 
-  // =====================================================
-  // FILTER + PAGINATION
-  // =====================================================
+  // FILTER
   const filtered = hariData.filter((h) => h.namaHari.toLowerCase().includes(searchTerm.toLowerCase()));
 
   const totalPages = Math.ceil(filtered.length / rowsPerPage);
@@ -65,7 +80,7 @@ export default function ConfigHariPage() {
   const paginated = filtered.slice(startIndex, startIndex + rowsPerPage);
 
   // =====================================================
-  // OPEN MODAL HANDLERS
+  // OPEN MODAL
   // =====================================================
   const openAddModal = () => {
     setModalMode("add");
@@ -86,15 +101,24 @@ export default function ConfigHariPage() {
   // =====================================================
   // DELETE
   // =====================================================
-  const handleDelete = async (id: number) => {
-    const { error } = await supabase.from("hari").delete().eq("id", id).select("*");
+  const handleDelete = (id: number) => {
+    setDeleteId(id);
+    setConfirmDeleteOpen(true);
+  };
+
+  const confirmDeleteAction = async () => {
+    if (deleteId === null) return;
+
+    const { error } = await supabase.from("hari").delete().eq("id", deleteId).select("*");
+
+    setConfirmDeleteOpen(false);
 
     if (error) {
-      alert("Tidak bisa menghapus. Data digunakan di tabel lain.");
-      console.error(error);
+      setErrorAddOpen(true);
       return;
     }
 
+    setSuccessDeleteOpen(true);
     loadHari();
   };
 
@@ -102,20 +126,42 @@ export default function ConfigHariPage() {
   // SUBMIT
   // =====================================================
   const handleSubmit = async (data: HariFormData) => {
+    let errorOccurred = false;
+
     if (modalMode === "add") {
-      await supabase.from("hari").insert({
+      const { error } = await supabase.from("hari").insert({
         nama: data.namaHari,
+        status: data.status === "Aktif",
       });
+
+      if (error) {
+        errorOccurred = true;
+      } else {
+        setSuccessAddOpen(true);
+      }
     } else {
-      await supabase
+      const { error } = await supabase
         .from("hari")
         .update({
           nama: data.namaHari,
+          status: data.status === "Aktif",
         })
         .eq("id", data.id);
+
+      if (error) {
+        errorOccurred = true;
+      } else {
+        setSuccessSaveOpen(true);
+      }
     }
 
     setModalOpen(false);
+
+    if (errorOccurred) {
+      setErrorAddOpen(true);
+      return;
+    }
+
     loadHari();
   };
 
@@ -154,6 +200,7 @@ export default function ConfigHariPage() {
             <tr>
               <th className="p-3 w-12 text-center">ID</th>
               <th className="p-3">Hari</th>
+              <th className="p-3 w-32 text-center">Status</th>
               <th className="p-3 text-center">Aksi</th>
             </tr>
           </thead>
@@ -161,7 +208,7 @@ export default function ConfigHariPage() {
           <tbody className="text-gray-700">
             {loading && (
               <tr>
-                <td colSpan={3} className="p-4 text-center text-gray-500">
+                <td colSpan={4} className="p-4 text-center text-gray-500">
                   Memuat...
                 </td>
               </tr>
@@ -171,7 +218,10 @@ export default function ConfigHariPage() {
               paginated.map((h, i) => (
                 <tr key={h.id} className="border-b hover:bg-sky-50">
                   <td className="p-3 text-center w-12">{startIndex + i + 1}</td>
+
                   <td className="p-3 font-medium">{h.namaHari}</td>
+
+                  <td className="p-3 text-center">{h.status}</td>
 
                   <td className="p-3 text-center">
                     <div className="flex justify-center gap-2">
@@ -207,8 +257,18 @@ export default function ConfigHariPage() {
         </Button>
       </div>
 
-      {/* MODAL */}
+      {/* MODALS */}
       <HariModal open={modalOpen} mode={modalMode} initialData={selectedHari} onClose={() => setModalOpen(false)} onSubmit={handleSubmit} />
+
+      <ConfirmDeleteModal open={confirmDeleteOpen} onCancel={() => setConfirmDeleteOpen(false)} onConfirm={confirmDeleteAction} />
+
+      <SuccessDeleteModal open={successDeleteOpen} onClose={() => setSuccessDeleteOpen(false)} />
+
+      <SuccessAddModal open={successAddOpen} onClose={() => setSuccessAddOpen(false)} />
+
+      <SuccessSaveModal open={successSaveOpen} onClose={() => setSuccessSaveOpen(false)} />
+
+      <ErrorAddModal open={errorAddOpen} onClose={() => setErrorAddOpen(false)} />
     </div>
   );
 }

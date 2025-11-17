@@ -70,6 +70,8 @@ export default function SiswaModal({ open, mode, initialData, onClose, onSubmit 
     email: "",
   });
 
+  const [errors, setErrors] = useState<{ [key: string]: string }>({});
+
   // ===========================
   // DROPDOWN DATA
   // ===========================
@@ -137,7 +139,21 @@ export default function SiswaModal({ open, mode, initialData, onClose, onSubmit 
   // ===========================
   // SUBMIT
   // ===========================
-  const handleSubmit = () => onSubmit(form);
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!form.nama.trim()) newErrors.nama = "Nama wajib diisi.";
+    if (!form.nik.trim()) newErrors.nik = "NIK wajib diisi.";
+    if (!form.nisn.trim()) newErrors.nisn = "NISN wajib diisi.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = () => {
+    if (!validate()) return;
+    onSubmit(form);
+  };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -148,10 +164,12 @@ export default function SiswaModal({ open, mode, initialData, onClose, onSubmit 
 
         <div className="grid grid-cols-2 gap-4 py-4">
           <Input placeholder="Nama" value={form.nama} onChange={(e) => updateField("nama", e.target.value)} />
+          {errors.nama && <p className="text-red-500 text-xs">{errors.nama}</p>}
 
           <Input placeholder="NIPD" value={form.nipd} onChange={(e) => updateField("nipd", e.target.value)} />
 
           <Input placeholder="NISN" value={form.nisn} onChange={(e) => updateField("nisn", e.target.value)} />
+          {errors.nisn && <p className="text-red-500 text-xs">{errors.nisn}</p>}
 
           {/* JENIS KELAMIN */}
           <Select value={form.jk} onValueChange={(v) => updateField("jk", v)}>
@@ -169,6 +187,7 @@ export default function SiswaModal({ open, mode, initialData, onClose, onSubmit 
           <Input type="date" value={form.tanggalLahir} onChange={(e) => updateField("tanggalLahir", e.target.value)} />
 
           <Input placeholder="NIK" value={form.nik} onChange={(e) => updateField("nik", e.target.value)} />
+          {errors.nik && <p className="text-red-500 text-xs">{errors.nik}</p>}
 
           {/* AGAMA ENUM */}
           <Select value={form.agama} onValueChange={(v) => updateField("agama", v)}>

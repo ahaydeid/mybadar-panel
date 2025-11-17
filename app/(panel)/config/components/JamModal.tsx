@@ -32,8 +32,12 @@ export default function JamModal({ open, mode, initialData, existingCount = 0, o
     status: "Aktif",
   });
 
-  // SYNC EDIT / RESET ADD
+  const [errors, setErrors] = React.useState<{ [key: string]: string }>({});
+
+  // SYNC DATA EDIT / RESET ADD
   React.useEffect(() => {
+    if (!open) return;
+
     if (mode === "edit" && initialData) {
       setForm(initialData);
     } else {
@@ -45,13 +49,28 @@ export default function JamModal({ open, mode, initialData, existingCount = 0, o
         status: "Aktif",
       });
     }
-  }, [mode, initialData, existingCount]);
+
+    setErrors({});
+  }, [open, mode, initialData, existingCount]);
+
+  // VALIDASI WAJIB
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!form.nama.trim()) newErrors.nama = "Nama jam wajib diisi.";
+    if (!form.jamMulai) newErrors.jamMulai = "Jam mulai wajib diisi.";
+    if (!form.jamSelesai) newErrors.jamSelesai = "Jam selesai wajib diisi.";
+    if (!form.status) newErrors.status = "Status wajib dipilih.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = () => {
-    if (!form.nama || !form.jamMulai || !form.jamSelesai) return;
+    if (!validate()) return;
 
     const payload: JamFormData = {
-      ...form, // id = null ketika add, angka ketika edit
+      ...form,
     };
 
     onSubmit(payload);
@@ -69,32 +88,39 @@ export default function JamModal({ open, mode, initialData, existingCount = 0, o
           <div>
             <label className="text-sm font-medium">Nama Jam</label>
             <Input value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} placeholder="J-1" />
+            {errors.nama && <p className="text-red-500 text-xs">{errors.nama}</p>}
           </div>
 
           {/* JAM MULAI */}
           <div>
             <label className="text-sm font-medium">Jam Mulai</label>
             <Input type="time" value={form.jamMulai} onChange={(e) => setForm({ ...form, jamMulai: e.target.value })} />
+            {errors.jamMulai && <p className="text-red-500 text-xs">{errors.jamMulai}</p>}
           </div>
 
           {/* JAM SELESAI */}
           <div>
             <label className="text-sm font-medium">Jam Selesai</label>
             <Input type="time" value={form.jamSelesai} onChange={(e) => setForm({ ...form, jamSelesai: e.target.value })} />
+            {errors.jamSelesai && <p className="text-red-500 text-xs">{errors.jamSelesai}</p>}
           </div>
 
           {/* STATUS */}
           <div>
             <label className="text-sm font-medium">Status</label>
+
             <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as "Aktif" | "Tidak Aktif" })}>
               <SelectTrigger>
                 <SelectValue placeholder="Pilih status" />
               </SelectTrigger>
+
               <SelectContent>
                 <SelectItem value="Aktif">Aktif</SelectItem>
                 <SelectItem value="Tidak Aktif">Tidak Aktif</SelectItem>
               </SelectContent>
             </Select>
+
+            {errors.status && <p className="text-red-500 text-xs">{errors.status}</p>}
           </div>
         </div>
 
@@ -102,6 +128,7 @@ export default function JamModal({ open, mode, initialData, existingCount = 0, o
           <Button variant="outline" onClick={onClose}>
             Batal
           </Button>
+
           <Button className="bg-sky-600 text-white" onClick={handleSubmit}>
             {mode === "add" ? "Tambah" : "Simpan"}
           </Button>

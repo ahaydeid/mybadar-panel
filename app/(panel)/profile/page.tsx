@@ -4,7 +4,7 @@ import UnderDevelopment from "@/app/components/UnderDevelopment";
 const page = () => {
   return (
     <div>
-      <h1 className="text-center text-3xl mt-3 font-bold">Manajemen Siswa - Pemanggilan</h1>
+      <h1 className="text-center text-3xl mt-3 font-bold">Profile</h1>
       <UnderDevelopment />
     </div>
   );

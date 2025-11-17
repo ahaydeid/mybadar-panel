@@ -1,5 +1,27 @@
 import type { LucideIcon } from "lucide-react";
-import { LayoutDashboard, Loader2, ClipboardCheck, Users, BookOpen, Briefcase, FileText, FileSpreadsheet, LifeBuoy, BarChart3, Megaphone, UserCog, Settings, Shield, CalendarDays, FolderCog } from "lucide-react";
+import {
+  LayoutDashboard,
+  CalendarClock,
+  CalendarCheck2,
+  School,
+  Users2,
+  Briefcase,
+  FileText,
+  FileSpreadsheet,
+  LifeBuoy,
+  BarChart3,
+  Megaphone,
+  Settings,
+  Shield,
+  CalendarDays,
+  FolderCog,
+  Calendar,
+  ClipboardList,
+  ClipboardEdit,
+  GraduationCap,
+  FolderKanban,
+  FileCheck2,
+} from "lucide-react";
 
 export type MenuItem = {
   name: string;
@@ -13,12 +35,12 @@ export const panelMenu: MenuItem[] = [
   { name: "Dashboard", icon: LayoutDashboard, path: "/dashboard" },
 
   // Hari ini
-  { name: "Hari Ini", icon: Loader2, path: "/hari-ini" },
+  { name: "Hari Ini", icon: CalendarClock, path: "/hari-ini" },
 
   // Absensi
   {
     name: "Log Absensi",
-    icon: ClipboardCheck,
+    icon: CalendarCheck2,
     path: "/absensi",
     children: [
       { name: "Guru", path: "/absensi/guru" },
@@ -27,17 +49,50 @@ export const panelMenu: MenuItem[] = [
     ],
   },
 
+  // Log siswa
+  {
+    name: "Log Siswa",
+    icon: ClipboardList,
+    path: "/log-siswa",
+    children: [
+      { name: "Absensi", path: "/log-siswa/absensi" },
+      { name: "Nilai", path: "/log-siswa/nilai" },
+    ],
+  },
+
+  // Kelas
+  {
+    name: "Kelas",
+    icon: School,
+    path: "/kelas",
+    children: [
+      { name: "Absensi", path: "/kelas/absensi" },
+      { name: "Nilai", path: "/kelas/nilai" },
+    ],
+  },
+
+  // Kelas Binaan
+  {
+    name: "Kelas Binaan",
+    icon: GraduationCap,
+    path: "/kelas-binaan",
+    children: [
+      { name: "Absensi", path: "/kelas-binaan/absensi" },
+      { name: "Nilai", path: "/kelas-binaan/nilai" },
+    ],
+  },
+
   // Rekap Nilai
   {
     name: "Rekap Nilai",
-    icon: BookOpen,
+    icon: FileCheck2,
     path: "/rekap-nilai",
   },
 
   // Master Data
   {
     name: "Master Data",
-    icon: FileSpreadsheet,
+    icon: FolderKanban,
     path: "/master-data",
     children: [
       { name: "Guru", path: "/master-data/guru" },
@@ -49,16 +104,17 @@ export const panelMenu: MenuItem[] = [
     ],
   },
 
-  // Manajemen siswa
+  // Kedisiplinan Siswa
   {
-    name: "Manajemen Siswa",
-    icon: UserCog,
-    path: "/manajemen-siswa",
+    name: "Kedisiplinan Siswa",
+    icon: ClipboardEdit,
+    path: "/disiplin-siswa",
     children: [
-      { name: "SP", path: "/manajemen-siswa/sp" },
-      { name: "Pemanggilan", path: "/manajemen-siswa/pemanggilan" },
-      { name: "Pelanggaran", path: "/manajemen-siswa/pelanggaran" },
-      { name: "Pembinaan", path: "/manajemen-siswa/pembinaan" },
+      { name: "Status Kedisiplinan", path: "/disiplin-siswa/status" },
+      { name: "Pelanggaran", path: "/disiplin-siswa/pelanggaran" },
+      { name: "Pembinaan", path: "/disiplin-siswa/pembinaan" },
+      { name: "Surat Peringatan (SP)", path: "/disiplin-siswa/sp" },
+      { name: "Pemanggilan", path: "/disiplin-siswa/pemanggilan" },
     ],
   },
 
@@ -93,10 +149,13 @@ export const panelMenu: MenuItem[] = [
   { name: "Pengumuman", icon: Megaphone, path: "/pengumuman" },
 
   // Users
-  { name: "Users", icon: Users, path: "/users" },
+  { name: "Users", icon: Users2, path: "/users" },
 
   // Settings
   { name: "Settings", icon: Settings, path: "/settings" },
+
+  // Kalender Akademik
+  { name: "Kalender Akademik", icon: Calendar, path: "/kalender-akademik" },
 
   // Config
   {
@@ -115,6 +174,7 @@ export const panelMenu: MenuItem[] = [
         ],
       },
       { name: "Role", icon: Shield, path: "/config/role" },
+      { name: "Kalender Akademik", icon: Calendar, path: "/config/kalender-akademik" },
     ],
   },
 ];

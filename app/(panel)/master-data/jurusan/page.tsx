@@ -5,6 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Pencil, Trash2, Plus } from "lucide-react";
 import JurusanModal, { JurusanFormData } from "./components/JurusanModal";
 import { supabase } from "@/lib/supabase/client";
+import ConfirmDeleteModal from "@/app/components/ConfirmDeleteModal";
+import SuccessAddModal from "@/app/components/SuccessAddModal";
+import SuccessSaveModal from "@/app/components/SuccessSaveModal";
+import SuccessDeleteModal from "@/app/components/SuccessDeleteModal";
 
 export default function MasterJurusanPage() {
   const [jurusan, setJurusan] = React.useState<JurusanFormData[]>([]);
@@ -14,9 +18,12 @@ export default function MasterJurusanPage() {
   const [modalMode, setModalMode] = React.useState<"add" | "edit">("add");
   const [selectedJurusan, setSelectedJurusan] = React.useState<JurusanFormData | undefined>();
 
-  // ===============================
-  // LOAD DATA REAL DARI SUPABASE (WITH RELATION)
-  // ===============================
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
+  const [successAddOpen, setSuccessAddOpen] = React.useState(false);
+  const [successSaveOpen, setSuccessSaveOpen] = React.useState(false);
+  const [successDeleteOpen, setSuccessDeleteOpen] = React.useState(false);
+  const [deleteTargetId, setDeleteTargetId] = React.useState<number | string | null>(null);
+
   const loadJurusan = async () => {
     setLoading(true);
 
@@ -43,9 +50,6 @@ export default function MasterJurusanPage() {
     loadJurusan();
   }, []);
 
-  // ===============================
-  // Tambah / Edit
-  // ===============================
   const handleSubmit = async (data: JurusanFormData) => {
     if (modalMode === "add") {
       const { error } = await supabase.from("jurusan").insert({
@@ -55,9 +59,12 @@ export default function MasterJurusanPage() {
         deskripsi: data.deskripsi ?? null,
       });
 
-      if (!error) await loadJurusan();
+      if (!error) {
+        await loadJurusan();
+        setModalOpen(false);
+        setSuccessAddOpen(true);
+      }
     } else {
-      // FIX ESLINT SAFE CHECK
       if (!selectedJurusan || !selectedJurusan.id) {
         console.error("No selected jurusan id");
         return;
@@ -73,26 +80,32 @@ export default function MasterJurusanPage() {
         })
         .eq("id", selectedJurusan.id);
 
-      if (!error) await loadJurusan();
+      if (!error) {
+        await loadJurusan();
+        setModalOpen(false);
+        setSuccessSaveOpen(true);
+      }
     }
-
-    setModalOpen(false);
   };
 
-  // ===============================
-  // Hapus
-  // ===============================
-  const handleDelete = async (id: number | string) => {
-    if (!confirm("Hapus jurusan ini?")) return;
-
-    const { error } = await supabase.from("jurusan").delete().eq("id", id);
-
-    if (!error) await loadJurusan();
+  const handleDelete = (id: number | string) => {
+    setDeleteTargetId(id);
+    setConfirmDeleteOpen(true);
   };
 
-  // ===============================
-  // Buka Modal
-  // ===============================
+  const handleConfirmDelete = async () => {
+    if (deleteTargetId === null) return;
+
+    const { error } = await supabase.from("jurusan").delete().eq("id", deleteTargetId);
+
+    if (!error) {
+      await loadJurusan();
+      setConfirmDeleteOpen(false);
+      setSuccessDeleteOpen(true);
+      setDeleteTargetId(null);
+    }
+  };
+
   const handleAdd = () => {
     setModalMode("add");
     setSelectedJurusan(undefined);
@@ -105,9 +118,6 @@ export default function MasterJurusanPage() {
     setModalOpen(true);
   };
 
-  // ===============================
-  // UI (tidak disentuh)
-  // ===============================
   return (
     <div className="w-full space-y-6">
       <div className="flex items-center justify-between">
@@ -167,6 +177,19 @@ export default function MasterJurusanPage() {
       </div>
 
       <JurusanModal open={modalOpen} mode={modalMode} initialData={selectedJurusan} onClose={() => setModalOpen(false)} onSubmit={handleSubmit} />
+
+      <ConfirmDeleteModal
+        open={confirmDeleteOpen}
+        onCancel={() => {
+          setConfirmDeleteOpen(false);
+          setDeleteTargetId(null);
+        }}
+        onConfirm={handleConfirmDelete}
+      />
+
+      <SuccessAddModal open={successAddOpen} onClose={() => setSuccessAddOpen(false)} />
+      <SuccessSaveModal open={successSaveOpen} onClose={() => setSuccessSaveOpen(false)} />
+      <SuccessDeleteModal open={successDeleteOpen} onClose={() => setSuccessDeleteOpen(false)} />
     </div>
   );
 }

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "My Badar - Panel",
+  title: "My Badar - Desktop",
   description: "Panel managemen internal sekolah",
 };
 

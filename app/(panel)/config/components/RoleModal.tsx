@@ -195,7 +195,7 @@ export default function RoleModal({ open, mode, initialData, menuTree, onClose, 
                           return (
                             <div key={child.path}>
                               {/* level 2 */}
-                              <label className="flex items-center gap-2 cursor-pointer text-sm">
+                              <label className="flex items-center ml-5 gap-2 cursor-pointer text-sm">
                                 <input
                                   type="checkbox"
                                   checked={fully2}
@@ -210,7 +210,7 @@ export default function RoleModal({ open, mode, initialData, menuTree, onClose, 
 
                               {/* level 3 */}
                               {child.children && (
-                                <div className="ml-6 mt-1 space-y-1">
+                                <div className="ml-8 my-2 space-y-3">
                                   {child.children.map((grand) => (
                                     <label key={grand.path} className="flex items-center gap-2 cursor-pointer text-xs text-gray-700">
                                       <input type="checkbox" checked={form.permissions.includes(grand.path)} onChange={() => handleTogglePermission(grand)} className="h-4 w-4" />

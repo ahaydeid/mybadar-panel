@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, ChevronRight, Menu, X, User } from "lucide-react";
+import { ChevronDown, ChevronRight, Menu, X } from "lucide-react";
 
 import type { MenuItem } from "../(panel)/menu";
 import { panelMenu } from "../(panel)/menu";
@@ -40,7 +40,7 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
               {/* Dropdown button */}
               <button
                 onClick={() => handleToggleDropdown(item.path)}
-                className={`flex items-center gap-3 w-full ${padding} text-sm transition ${isOpen ? "justify-start" : "justify-center"} ${active ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-sky-50"}`}
+                className={`flex items-center gap-3 mb-0.5 w-full ${padding} text-sm transition ${isOpen ? "justify-start" : "justify-center"} ${active ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-sky-50"}`}
               >
                 {item.icon && <item.icon className="w-5 h-5" />}
                 {isOpen && (
@@ -83,10 +83,9 @@ export default function Sidebar({ isOpen, onToggle }: SidebarProps) {
 
       {/* Profile */}
       <div className="sticky bottom-0 bg-white border-t border-gray-200 p-3">
-        <Link href="/profile" className={`flex items-center gap-3 text-sm p-2 transition ${pathname === "/profile" ? "bg-sky-600 text-white font-semibold" : "text-gray-700 hover:bg-gray-50"}`}>
-          <User className="w-6 h-6" />
-          {isOpen && <span>Profile</span>}
-        </Link>
+        <a href="https://ahadi.my.id/" target="_blank" rel="noopener noreferrer" className="text-gray-400 hover:text-gray-600 transition duration-150">
+          <h3 className="text-sm">Created with ❤️ by Hadi</h3>
+        </a>
       </div>
     </aside>
   );

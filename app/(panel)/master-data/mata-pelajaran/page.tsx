@@ -7,6 +7,11 @@ import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import MataPelajaranModal, { MapelFormData } from "./components/MataPelajaranModal";
 import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react";
 
+import ConfirmDeleteModal from "@/app/components/ConfirmDeleteModal";
+import SuccessAddModal from "@/app/components/SuccessAddModal";
+import SuccessSaveModal from "@/app/components/SuccessSaveModal";
+import SuccessDeleteModal from "@/app/components/SuccessDeleteModal";
+
 type SupabaseMapel = {
   id: number;
   kode_mapel: string;
@@ -34,8 +39,17 @@ export default function MasterMapelPage() {
   const [dataMapel, setDataMapel] = React.useState<MataPelajaran[]>([]);
   const [loading, setLoading] = React.useState<boolean>(true);
   const [searchTerm, setSearchTerm] = React.useState<string>("");
+
   const [isModalOpen, setModalOpen] = React.useState<boolean>(false);
   const [selectedMapel, setSelectedMapel] = React.useState<MapelFormData | null>(null);
+
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
+  const [successAddOpen, setSuccessAddOpen] = React.useState(false);
+  const [successSaveOpen, setSuccessSaveOpen] = React.useState(false);
+  const [successDeleteOpen, setSuccessDeleteOpen] = React.useState(false);
+
+  const [deleteTargetId, setDeleteTargetId] = React.useState<number | null>(null);
+
   const [page, setPage] = React.useState<number>(1);
   const rowsPerPage = 10;
 
@@ -74,13 +88,11 @@ export default function MasterMapelPage() {
   const paginated = filtered.slice(startIndex, startIndex + rowsPerPage);
 
   const handleSave = async (data: MapelFormData) => {
-    // PERBAIKAN DILAKUKAN DI SINI: Mengubah perbandingan angka (11) menjadi string ("XI")
     const tingkatValue = data.tingkat === "X" ? 10 : data.tingkat === "XI" ? 11 : 12;
-
     const statusDb = data.status === "Aktif" ? "ACTIVE" : "INACTIVE";
 
     if (selectedMapel) {
-      await supabase
+      const { error } = await supabase
         .from("mata_pelajaran")
         .update({
           kode_mapel: data.kode,
@@ -92,8 +104,15 @@ export default function MasterMapelPage() {
           status: statusDb,
         })
         .eq("id", selectedMapel.id);
+
+      if (!error) {
+        setModalOpen(false);
+        setSelectedMapel(null);
+        loadMapel();
+        setSuccessSaveOpen(true);
+      }
     } else {
-      await supabase.from("mata_pelajaran").insert({
+      const { error } = await supabase.from("mata_pelajaran").insert({
         kode_mapel: data.kode,
         nama: data.nama,
         kategori: data.kategori,
@@ -102,28 +121,36 @@ export default function MasterMapelPage() {
         warna_hex: data.warna,
         status: statusDb,
       });
-    }
 
-    setModalOpen(false);
-    setSelectedMapel(null);
-    loadMapel();
+      if (!error) {
+        setModalOpen(false);
+        setSelectedMapel(null);
+        loadMapel();
+        setSuccessAddOpen(true);
+      }
+    }
   };
 
-  const handleDelete = async (id: number) => {
-    const { error } = await supabase.from("mata_pelajaran").delete().eq("id", id).select("*");
+  const handleDeleteClick = (id: number) => {
+    setDeleteTargetId(id);
+    setConfirmDeleteOpen(true);
+  };
 
-    if (error) {
-      alert("Tidak bisa menghapus karena data sedang digunakan.");
-      console.log(error);
-      return;
+  const confirmDelete = async () => {
+    if (deleteTargetId === null) return;
+
+    const { error } = await supabase.from("mata_pelajaran").delete().eq("id", deleteTargetId);
+
+    if (!error) {
+      await loadMapel();
+      setConfirmDeleteOpen(false);
+      setSuccessDeleteOpen(true);
+      setDeleteTargetId(null);
     }
-
-    loadMapel();
   };
 
   return (
     <div className="w-full space-y-6">
-      {/* Header */}
       <div className="flex justify-between items-center">
         <h1 className="text-xl font-semibold">Data Mata Pelajaran</h1>
 
@@ -139,13 +166,18 @@ export default function MasterMapelPage() {
             className="w-64"
           />
 
-          <Button className="flex items-center gap-2 bg-sky-600 text-white" onClick={() => setModalOpen(true)}>
+          <Button
+            className="flex items-center gap-2 bg-sky-600 text-white"
+            onClick={() => {
+              setSelectedMapel(null);
+              setModalOpen(true);
+            }}
+          >
             <Plus className="w-4 h-4" /> Tambah
           </Button>
         </div>
       </div>
 
-      {/* Table */}
       <div className="rounded border bg-white shadow-sm">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[1000px] text-sm">
@@ -211,7 +243,7 @@ export default function MasterMapelPage() {
                           <Pencil className="w-4 h-4" /> Edit
                         </button>
 
-                        <button className="px-3 py-2 bg-rose-500 text-white text-xs rounded-md flex items-center gap-1" onClick={() => handleDelete(m.no)}>
+                        <button className="px-3 py-2 bg-rose-500 text-white text-xs rounded-md flex items-center gap-1" onClick={() => handleDeleteClick(m.no)}>
                           <Trash2 className="w-4 h-4" /> Hapus
                         </button>
                       </div>
@@ -223,7 +255,6 @@ export default function MasterMapelPage() {
         </div>
       </div>
 
-      {/* Pagination */}
       <div className="flex justify-end gap-3">
         <Button variant="outline" size="icon" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1}>
           <ChevronLeft className="w-4 h-4" />
@@ -238,7 +269,6 @@ export default function MasterMapelPage() {
         </Button>
       </div>
 
-      {/* Modal */}
       <MataPelajaranModal
         open={isModalOpen}
         mode={selectedMapel ? "edit" : "add"}
@@ -249,6 +279,19 @@ export default function MasterMapelPage() {
         }}
         onSubmit={handleSave}
       />
+
+      <ConfirmDeleteModal
+        open={confirmDeleteOpen}
+        onCancel={() => {
+          setConfirmDeleteOpen(false);
+          setDeleteTargetId(null);
+        }}
+        onConfirm={confirmDelete}
+      />
+
+      <SuccessAddModal open={successAddOpen} onClose={() => setSuccessAddOpen(false)} />
+      <SuccessSaveModal open={successSaveOpen} onClose={() => setSuccessSaveOpen(false)} />
+      <SuccessDeleteModal open={successDeleteOpen} onClose={() => setSuccessDeleteOpen(false)} />
     </div>
   );
 }

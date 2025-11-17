@@ -52,6 +52,8 @@ export default function JurusanModal({ open, mode, initialData, onClose, onSubmi
     deskripsi: "",
   });
 
+  const [errors, setErrors] = React.useState<{ [key: string]: string }>({});
+
   const [guruList, setGuruList] = React.useState<{ id: number; nama: string }[]>([]);
   const [loadingGuru, setLoadingGuru] = React.useState<boolean>(false);
 
@@ -103,18 +105,27 @@ export default function JurusanModal({ open, mode, initialData, onClose, onSubmi
   // ======================================================
   // SUBMIT
   // ======================================================
+
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!form.nama.trim()) newErrors.nama = "Nama jurusan wajib diisi.";
+    if (!form.singkatan || !form.singkatan.trim()) newErrors.singkatan = "Kode jurusan wajib diisi.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = (): void => {
-    if (!form.nama.trim() || !form.singkatan?.trim()) return;
+    if (!validate()) return;
 
     const data: JurusanFormData = {
       id: form.id,
-      kode: form.singkatan.toUpperCase(),
+      kode: (form.singkatan ?? "").toUpperCase(),
       nama: form.nama.trim(),
-      singkatan: form.singkatan.toUpperCase(),
-
-      kepalaProgram: form.kepalaProgram ?? null, // nama
-      kepalaProgramId: form.kepalaProgramId ?? null, // **ID untuk DB**
-
+      singkatan: (form.singkatan ?? "").toUpperCase(),
+      kepalaProgram: form.kepalaProgram ?? null,
+      kepalaProgramId: form.kepalaProgramId ?? null,
       deskripsi: form.deskripsi.trim(),
     };
 
@@ -136,12 +147,14 @@ export default function JurusanModal({ open, mode, initialData, onClose, onSubmi
           <div className="space-y-1">
             <label className="text-sm font-medium">Nama Jurusan</label>
             <Input value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} />
+            {errors.nama && <p className="text-red-500 text-xs mt-1">{errors.nama}</p>}
           </div>
 
           {/* SINGKATAN */}
           <div className="space-y-1">
-            <label className="text-sm font-medium">Singkatan</label>
+            <label className="text-sm font-medium">Kode Jurusan</label>
             <Input value={form.singkatan} onChange={(e) => setForm({ ...form, singkatan: e.target.value.toUpperCase() })} />
+            {errors.singkatan && <p className="text-red-500 text-xs mt-1">{errors.singkatan}</p>}
           </div>
 
           {/* KEPALA PROGRAM */}

@@ -7,6 +7,12 @@ import JamModal, { JamFormData } from "@/app/(panel)/config/components/JamModal"
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 
+import ConfirmDeleteModal from "@/app/components/ConfirmDeleteModal";
+import SuccessDeleteModal from "@/app/components/SuccessDeleteModal";
+import SuccessAddModal from "@/app/components/SuccessAddModal";
+import SuccessSaveModal from "@/app/components/SuccessSaveModal";
+import ErrorAddModal from "@/app/components/ErrorAddModal";
+
 type Jam = {
   id: number;
   nama: string;
@@ -25,6 +31,14 @@ export default function ConfigJamPage() {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [modalMode, setModalMode] = React.useState<"add" | "edit">("add");
   const [selectedData, setSelectedData] = React.useState<JamFormData | undefined>(undefined);
+
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
+  const [deleteSuccessOpen, setDeleteSuccessOpen] = React.useState(false);
+  const [addSuccessOpen, setAddSuccessOpen] = React.useState(false);
+  const [saveSuccessOpen, setSaveSuccessOpen] = React.useState(false);
+  const [errorAddOpen, setErrorAddOpen] = React.useState(false);
+
+  const [rowToDelete, setRowToDelete] = React.useState<number | null>(null);
 
   const [page, setPage] = React.useState(1);
   const rowsPerPage = 10;
@@ -88,30 +102,50 @@ export default function ConfigJamPage() {
     setModalOpen(true);
   };
 
-  // DELETE
-  const handleDelete = async (id: number) => {
-    const { error } = await supabase.from("jam").delete().eq("id", id).select("*");
+  const requestDelete = (id: number) => {
+    setRowToDelete(id);
+    setConfirmDeleteOpen(true);
+  };
+
+  const doDelete = async () => {
+    if (!rowToDelete) return;
+
+    const { error } = await supabase.from("jam").delete().eq("id", rowToDelete).select("*");
 
     if (error) {
-      alert("Tidak bisa menghapus karena sedang digunakan di tabel lain.");
       console.error(error);
+      setErrorAddOpen(true);
       return;
     }
 
+    setDeleteSuccessOpen(true);
     loadJam();
   };
 
-  // SUBMIT
+  const handleConfirmDelete = () => {
+    void doDelete();
+    setConfirmDeleteOpen(false);
+  };
+
   const handleSubmit = async (data: JamFormData) => {
+    let errorOccurred = false;
+
     if (modalMode === "add") {
-      await supabase.from("jam").insert({
+      const { error } = await supabase.from("jam").insert({
         nama: data.nama,
         jam_mulai: data.jamMulai,
         jam_selesai: data.jamSelesai,
         status: data.status,
       });
+
+      if (error) {
+        console.error(error);
+        errorOccurred = true;
+      } else {
+        setAddSuccessOpen(true);
+      }
     } else {
-      await supabase
+      const { error } = await supabase
         .from("jam")
         .update({
           nama: data.nama,
@@ -120,9 +154,22 @@ export default function ConfigJamPage() {
           status: data.status,
         })
         .eq("id", Number(data.id));
+
+      if (error) {
+        console.error(error);
+        errorOccurred = true;
+      } else {
+        setSaveSuccessOpen(true);
+      }
     }
 
     setModalOpen(false);
+
+    if (errorOccurred) {
+      setErrorAddOpen(true);
+      return;
+    }
+
     loadJam();
   };
 
@@ -191,7 +238,7 @@ export default function ConfigJamPage() {
                         <Pencil className="w-4 h-4" /> Edit
                       </button>
 
-                      <button className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded text-xs flex items-center gap-1" onClick={() => handleDelete(j.id)}>
+                      <button className="px-3 py-1.5 bg-rose-500 hover:bg-rose-600 text-white rounded text-xs flex items-center gap-1" onClick={() => requestDelete(j.id)}>
                         <Trash2 className="w-4 h-4" /> Hapus
                       </button>
                     </div>
@@ -219,6 +266,13 @@ export default function ConfigJamPage() {
 
       {/* MODAL */}
       <JamModal open={modalOpen} mode={modalMode} existingCount={jamData.length} initialData={selectedData} onClose={() => setModalOpen(false)} onSubmit={handleSubmit} />
+
+      <ConfirmDeleteModal open={confirmDeleteOpen} onCancel={() => setConfirmDeleteOpen(false)} onConfirm={handleConfirmDelete} />
+
+      <SuccessDeleteModal open={deleteSuccessOpen} onClose={() => setDeleteSuccessOpen(false)} />
+      <SuccessAddModal open={addSuccessOpen} onClose={() => setAddSuccessOpen(false)} />
+      <SuccessSaveModal open={saveSuccessOpen} onClose={() => setSaveSuccessOpen(false)} />
+      <ErrorAddModal open={errorAddOpen} onClose={() => setErrorAddOpen(false)} />
     </div>
   );
 }

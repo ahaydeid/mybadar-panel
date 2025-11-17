@@ -7,6 +7,11 @@ import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react";
 import KelasModal, { KelasFormData } from "./components/KelasModal";
 
+import ConfirmDeleteModal from "@/app/components/ConfirmDeleteModal";
+import SuccessAddModal from "@/app/components/SuccessAddModal";
+import SuccessSaveModal from "@/app/components/SuccessSaveModal";
+import SuccessDeleteModal from "@/app/components/SuccessDeleteModal";
+
 type KelasRow = {
   id: number;
   nama_rombel: string;
@@ -38,8 +43,16 @@ export default function MasterKelasPage(): React.ReactElement {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [page, setPage] = React.useState(1);
   const rowsPerPage = 10;
+
   const [isModalOpen, setModalOpen] = React.useState(false);
   const [selectedKelas, setSelectedKelas] = React.useState<KelasFormData | null>(null);
+
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = React.useState(false);
+  const [successAddOpen, setSuccessAddOpen] = React.useState(false);
+  const [successSaveOpen, setSuccessSaveOpen] = React.useState(false);
+  const [successDeleteOpen, setSuccessDeleteOpen] = React.useState(false);
+
+  const [deleteTargetId, setDeleteTargetId] = React.useState<number | null>(null);
 
   const fetchKelas = async () => {
     setLoading(true);
@@ -61,28 +74,26 @@ export default function MasterKelasPage(): React.ReactElement {
     `
       )
       .order("id", { ascending: true })
-      .returns<KelasRow[]>(); 
+      .returns<KelasRow[]>();
 
-    if (error || !data) {
-      setLoading(false);
-      return;
+    if (!error && data) {
+      const mapped: KelasTableItem[] = data.map((row: KelasRow, index: number) => ({
+        id: row.id,
+        no: index + 1,
+        namaKelas: row.nama_rombel,
+        tingkat: (row.tingkat === 1 ? "X" : row.tingkat === 2 ? "XI" : "XII") as KelasTableItem["tingkat"],
+        jurusanId: row.jurusan?.id ?? null,
+        jurusanNama: row.jurusan?.nama ?? "",
+        waliId: row.wali_guru?.id ?? null,
+        waliNama: row.wali_guru?.nama ?? "",
+        jumlahSiswa: row.jumlah_siswa,
+        tahunAjaran: row.tahun_ajaran,
+        status: row.status,
+      }));
+
+      setData(mapped);
     }
 
-    const mapped: KelasTableItem[] = data.map((row: KelasRow, index: number) => ({
-      id: row.id,
-      no: index + 1,
-      namaKelas: row.nama_rombel,
-      tingkat: (row.tingkat === 1 ? "X" : row.tingkat === 2 ? "XI" : "XII") as KelasTableItem["tingkat"],
-      jurusanId: row.jurusan?.id ?? null,
-      jurusanNama: row.jurusan?.nama ?? "",
-      waliId: row.wali_guru?.id ?? null,
-      waliNama: row.wali_guru?.nama ?? "",
-      jumlahSiswa: row.jumlah_siswa,
-      tahunAjaran: row.tahun_ajaran,
-      status: row.status,
-    }));
-
-    setData(mapped);
     setLoading(false);
   };
 
@@ -106,19 +117,42 @@ export default function MasterKelasPage(): React.ReactElement {
     };
 
     if (form.id === null) {
-      await supabase.from("kelas").insert(payload);
-    } else {
-      await supabase.from("kelas").update(payload).eq("id", form.id);
-    }
+      const { error } = await supabase.from("kelas").insert(payload);
 
-    setModalOpen(false);
-    setSelectedKelas(null);
-    fetchKelas();
+      if (!error) {
+        setModalOpen(false);
+        setSelectedKelas(null);
+        fetchKelas();
+        setSuccessAddOpen(true);
+      }
+    } else {
+      const { error } = await supabase.from("kelas").update(payload).eq("id", form.id);
+
+      if (!error) {
+        setModalOpen(false);
+        setSelectedKelas(null);
+        fetchKelas();
+        setSuccessSaveOpen(true);
+      }
+    }
   };
 
-  const handleDelete = async (id: number) => {
-    await supabase.from("kelas").delete().eq("id", id);
-    fetchKelas();
+  const handleDeleteClick = (id: number) => {
+    setDeleteTargetId(id);
+    setConfirmDeleteOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (deleteTargetId === null) return;
+
+    const { error } = await supabase.from("kelas").delete().eq("id", deleteTargetId);
+
+    if (!error) {
+      await fetchKelas();
+      setConfirmDeleteOpen(false);
+      setSuccessDeleteOpen(true);
+      setDeleteTargetId(null);
+    }
   };
 
   return (
@@ -205,7 +239,7 @@ export default function MasterKelasPage(): React.ReactElement {
                           Edit
                         </button>
 
-                        <button className="px-3 py-2 bg-rose-500 text-white rounded-md flex items-center gap-1" onClick={() => handleDelete(k.id)}>
+                        <button className="px-3 py-2 bg-rose-500 text-white rounded-md flex items-center gap-1" onClick={() => handleDeleteClick(k.id)}>
                           <Trash2 className="w-4 h-4" />
                           Hapus
                         </button>
@@ -243,6 +277,19 @@ export default function MasterKelasPage(): React.ReactElement {
         }}
         onSubmit={handleSubmit}
       />
+
+      <ConfirmDeleteModal
+        open={confirmDeleteOpen}
+        onCancel={() => {
+          setConfirmDeleteOpen(false);
+          setDeleteTargetId(null);
+        }}
+        onConfirm={confirmDelete}
+      />
+
+      <SuccessAddModal open={successAddOpen} onClose={() => setSuccessAddOpen(false)} />
+      <SuccessSaveModal open={successSaveOpen} onClose={() => setSuccessSaveOpen(false)} />
+      <SuccessDeleteModal open={successDeleteOpen} onClose={() => setSuccessDeleteOpen(false)} />
     </div>
   );
 }

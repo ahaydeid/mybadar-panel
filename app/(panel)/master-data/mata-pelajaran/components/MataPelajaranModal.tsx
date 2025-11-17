@@ -24,28 +24,28 @@ interface Props {
   onSubmit: (data: MapelFormData) => void;
 }
 
-export default function MataPelajaranModal({
-  open,
-  mode,
-  initialData,
-  onClose,
-  onSubmit,
-}: Props) {
+export default function MataPelajaranModal({ open, mode, initialData, onClose, onSubmit }: Props) {
   const [form, setForm] = React.useState<MapelFormData>({
-    id: initialData?.id,
-    kode: initialData?.kode ?? "",
-    nama: initialData?.nama ?? "",
-    kategori: initialData?.kategori ?? "NORMATIF",
-    tingkat: initialData?.tingkat ?? "X",
-    jp: initialData?.jp ?? 1,
-    warna: initialData?.warna ?? "#2196F3",
-    status: initialData?.status ?? "Aktif",
+    id: undefined,
+    kode: "",
+    nama: "",
+    kategori: "NORMATIF",
+    tingkat: "X",
+    jp: 1,
+    warna: "#2196F3",
+    status: "Aktif",
   });
 
+  const [errors, setErrors] = React.useState<{ [key: string]: string }>({});
+
+  // RESET atau SET FORM KETIKA BUKA MODAL
   React.useEffect(() => {
-    if (initialData) {
+    if (!open) return;
+
+    if (mode === "edit" && initialData) {
       setForm(initialData);
     } else {
+      // Reset form saat tambah
       setForm({
         id: undefined,
         kode: "",
@@ -57,38 +57,41 @@ export default function MataPelajaranModal({
         status: "Aktif",
       });
     }
-  }, [initialData]);
+
+    setErrors({});
+  }, [open, mode, initialData]);
 
   if (!open) return null;
+
+  // VALIDASI
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!form.kode.trim()) newErrors.kode = "Kode mapel wajib diisi.";
+    if (!form.nama.trim()) newErrors.nama = "Nama mapel wajib diisi.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
       <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg">
-        <h2 className="text-xl font-bold mb-4">
-          {mode === "add" ? "Tambah Mapel" : "Edit Mapel"}
-        </h2>
+        <h2 className="text-xl font-bold mb-4">{mode === "add" ? "Tambah Mapel" : "Edit Mapel"}</h2>
 
         <div className="space-y-4">
           {/* KODE */}
           <div>
             <label className="text-sm font-semibold">Kode Mapel</label>
-            <Input
-              value={form.kode}
-              onChange={(e) =>
-                setForm({ ...form, kode: e.target.value.trim() })
-              }
-            />
+            <Input value={form.kode} onChange={(e) => setForm({ ...form, kode: e.target.value.toUpperCase() })} />
+            {errors.kode && <p className="text-red-500 text-xs">{errors.kode}</p>}
           </div>
 
           {/* NAMA */}
           <div>
             <label className="text-sm font-semibold">Nama Mapel</label>
-            <Input
-              value={form.nama}
-              onChange={(e) =>
-                setForm({ ...form, nama: e.target.value })
-              }
-            />
+            <Input value={form.nama} onChange={(e) => setForm({ ...form, nama: e.target.value })} />
+            {errors.nama && <p className="text-red-500 text-xs">{errors.nama}</p>}
           </div>
 
           {/* KATEGORI */}
@@ -134,17 +137,10 @@ export default function MataPelajaranModal({
           {/* JP */}
           <div>
             <label className="text-sm font-semibold">JP per Minggu</label>
-            <Input
-              type="number"
-              min={1}
-              value={form.jp}
-              onChange={(e) =>
-                setForm({ ...form, jp: Number(e.target.value) })
-              }
-            />
+            <Input type="number" min={1} value={form.jp} onChange={(e) => setForm({ ...form, jp: Number(e.target.value) })} />
           </div>
 
-          {/* 🎨 MODERN COLOR PICKER */}
+          {/* COLOR PICKER */}
           <div className="flex flex-col gap-2">
             <label className="text-sm font-semibold">Warna Mapel</label>
 
@@ -152,22 +148,12 @@ export default function MataPelajaranModal({
               <PopoverTrigger asChild>
                 <button className="w-full flex items-center justify-between px-3 py-2 border rounded bg-white">
                   <span className="font-medium">{form.warna}</span>
-                  <span
-                    className="w-5 h-5 rounded border"
-                    style={{ background: form.warna }}
-                  ></span>
+                  <span className="w-5 h-5 rounded border" style={{ background: form.warna }}></span>
                 </button>
               </PopoverTrigger>
 
               <PopoverContent className="w-auto p-3">
-                <input
-                  type="color"
-                  value={form.warna}
-                  onChange={(e) =>
-                    setForm({ ...form, warna: e.target.value })
-                  }
-                  className="w-20 h-12 rounded cursor-pointer"
-                />
+                <input type="color" value={form.warna} onChange={(e) => setForm({ ...form, warna: e.target.value })} className="w-20 h-12 rounded cursor-pointer" />
               </PopoverContent>
             </Popover>
           </div>
@@ -199,7 +185,10 @@ export default function MataPelajaranModal({
 
           <Button
             className="bg-sky-600 text-white"
-            onClick={() => onSubmit(form)}
+            onClick={() => {
+              if (!validate()) return;
+              onSubmit(form);
+            }}
           >
             Simpan
           </Button>

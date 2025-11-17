@@ -89,6 +89,7 @@ const defaultForm: GuruFormData = {
 // ===================================================
 export default function GuruModal({ open, mode, initialData, onClose, onSubmit }: GuruModalProps) {
   const [form, setForm] = React.useState<GuruFormData>(defaultForm);
+  const [errors, setErrors] = React.useState<{ [key: string]: string }>({});
   const [mapelList, setMapelList] = React.useState<MapelItem[]>([]);
 
   // Load mapel
@@ -135,11 +136,23 @@ export default function GuruModal({ open, mode, initialData, onClose, onSubmit }
     }));
   };
 
+  const validate = () => {
+    const newErrors: { [key: string]: string } = {};
+
+    if (!form.nama.trim()) newErrors.nama = "Nama wajib diisi.";
+    if (!form.jk) newErrors.jk = "Jenis kelamin wajib dipilih.";
+    if (!form.nik.trim()) newErrors.nik = "NIK wajib diisi.";
+    if (!form.tmtKerja) newErrors.tmtKerja = "TMT Kerja wajib diisi.";
+    if (!form.status) newErrors.status = "Status wajib dipilih.";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   // Submit
   const handleSubmit = () => {
-    if (!form.nama.trim()) return;
+    if (!validate()) return;
 
-    // Prevent date="" → Supabase error
     const clean = {
       ...form,
       tanggalLahir: form.tanggalLahir || null,
@@ -161,6 +174,7 @@ export default function GuruModal({ open, mode, initialData, onClose, onSubmit }
           <div>
             <label className="text-sm font-medium">Nama Lengkap</label>
             <Input value={form.nama} onChange={(e) => setForm((p) => ({ ...p, nama: e.target.value }))} />
+            {errors.nama && <p className="text-red-500 text-xs mt-1">{errors.nama}</p>}
           </div>
 
           {/* NUPTK */}
@@ -181,6 +195,7 @@ export default function GuruModal({ open, mode, initialData, onClose, onSubmit }
                 <SelectItem value="P">Perempuan</SelectItem>
               </SelectContent>
             </Select>
+            {errors.jk && <p className="text-red-500 text-xs mt-1">{errors.jk}</p>}
           </div>
 
           {/* TEMPAT LAHIR */}
@@ -199,6 +214,7 @@ export default function GuruModal({ open, mode, initialData, onClose, onSubmit }
           <div>
             <label className="text-sm font-medium">NIK</label>
             <Input value={form.nik} onChange={(e) => setForm((p) => ({ ...p, nik: e.target.value }))} />
+            {errors.nik && <p className="text-red-500 text-xs mt-1">{errors.nik}</p>}
           </div>
 
           {/* NIP */}
@@ -241,6 +257,7 @@ export default function GuruModal({ open, mode, initialData, onClose, onSubmit }
           <div>
             <label className="text-sm font-medium">TMT Kerja</label>
             <Input type="date" value={form.tmtKerja} onChange={(e) => setForm((p) => ({ ...p, tmtKerja: e.target.value }))} />
+            {errors.tmtKerja && <p className="text-red-500 text-xs mt-1">{errors.tmtKerja}</p>}
           </div>
 
           {/* TUGAS TAMBAHAN */}
@@ -313,6 +330,7 @@ export default function GuruModal({ open, mode, initialData, onClose, onSubmit }
                 <SelectItem value="INACTIVE">Tidak Aktif</SelectItem>
               </SelectContent>
             </Select>
+            {errors.status && <p className="text-red-500 text-xs mt-1">{errors.status}</p>}
           </div>
         </div>
 

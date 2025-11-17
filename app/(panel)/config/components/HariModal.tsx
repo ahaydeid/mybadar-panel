@@ -2,7 +2,6 @@
 
 import * as React from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 
@@ -23,7 +22,7 @@ interface HariModalProps {
 export default function HariModal({ open, mode, initialData, onClose, onSubmit }: HariModalProps) {
   const [form, setForm] = React.useState<HariFormData>({
     id: null,
-    namaHari: "",
+    namaHari: "Senin",
     status: "Aktif",
   });
 
@@ -33,7 +32,7 @@ export default function HariModal({ open, mode, initialData, onClose, onSubmit }
     } else {
       setForm({
         id: null,
-        namaHari: "",
+        namaHari: "Senin",
         status: "Aktif",
       });
     }
@@ -52,11 +51,26 @@ export default function HariModal({ open, mode, initialData, onClose, onSubmit }
         </DialogHeader>
 
         <div className="space-y-4">
+          {/* NAMA HARI */}
           <div>
             <label className="text-sm font-medium">Nama Hari</label>
-            <Input placeholder="Senin" value={form.namaHari} onChange={(e) => setForm({ ...form, namaHari: e.target.value })} />
+            <Select value={form.namaHari} onValueChange={(v) => setForm({ ...form, namaHari: v })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih hari" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="Senin">Senin</SelectItem>
+                <SelectItem value="Selasa">Selasa</SelectItem>
+                <SelectItem value="Rabu">Rabu</SelectItem>
+                <SelectItem value="Kamis">Kamis</SelectItem>
+                <SelectItem value="Jumat">Jumat</SelectItem>
+                <SelectItem value="Sabtu">Sabtu</SelectItem>
+                <SelectItem value="Minggu">Minggu</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
 
+          {/* STATUS */}
           <div>
             <label className="text-sm font-medium">Status</label>
             <Select value={form.status} onValueChange={(v) => setForm({ ...form, status: v as "Aktif" | "Tidak Aktif" })}>
