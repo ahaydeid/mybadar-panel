@@ -101,6 +101,7 @@ export const panelMenu: MenuItem[] = [
       { name: "Jurusan", path: "/master-data/jurusan" },
       { name: "Kelas", path: "/master-data/kelas" },
       { name: "Mata Pelajaran", path: "/master-data/mata-pelajaran" },
+      { name: "Kalender Akademik", path: "/master-data/kalender-akademik" },
     ],
   },
 
@@ -171,10 +172,10 @@ export const panelMenu: MenuItem[] = [
           { name: "Hari", path: "/config/hari" },
           { name: "Jam", path: "/config/jam" },
           { name: "Semester", path: "/config/semester" },
+          { name: "Giat Tahunan", path: "/config/giat-tahunan" },
         ],
       },
       { name: "Role", icon: Shield, path: "/config/role" },
-      { name: "Kalender Akademik", icon: Calendar, path: "/config/kalender-akademik" },
     ],
   },
 ];

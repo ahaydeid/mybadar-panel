@@ -4,7 +4,7 @@ import UnderDevelopment from "@/app/components/UnderDevelopment";
 const page = () => {
   return (
     <div>
-      <h1 className="text-center text-3xl mt-3 font-bold">Config - Kalender Akademik</h1>
+      <h1 className="text-center text-3xl mt-3 font-bold">Log Siswa - Absensi (Dari sisi admin)</h1>
       <UnderDevelopment />
     </div>
   );
