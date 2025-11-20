@@ -9,7 +9,6 @@ import { StatusType, DbAbsenRow, GuruRow, HariRow, SemesterRow, JadwalRow, JamRo
 function getStatus(jadwalMasuk: string, jamMasuk: string | null): StatusType {
   if (!jamMasuk) return "TIDAK HADIR";
 
-  // kalau jadwalMasuk bukan format jam (misal "-"), anggap hadir saja
   if (!/^\d{2}:\d{2}/.test(jadwalMasuk)) return "HADIR";
 
   const [jh, jm] = jadwalMasuk.split(":").map(Number);
@@ -21,7 +20,6 @@ function getStatus(jadwalMasuk: string, jamMasuk: string | null): StatusType {
   return absenMinutes <= jadwalMinutes ? "HADIR" : "TERLAMBAT";
 }
 
-/* Helper: nama hari Indonesia dari Date.getDay() */
 const HARI_IDN: string[] = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
 
 export default function AbsensiGuru() {
@@ -51,9 +49,17 @@ export default function AbsensiGuru() {
     const load = async () => {
       setLoading(true);
 
-      const today = new Date().toISOString().slice(0, 10);
+      // FIX: tanggal lokal
+      const now = new Date();
+      const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
-      const { data: absen } = await supabase.from("absensi_guru").select("*").eq("tanggal", today).order("id").returns<DbAbsenRow[]>();
+      // URUTAN TERBARU DI ATAS
+      const { data: absen } = await supabase
+        .from("absensi_guru")
+        .select("*")
+        .eq("tanggal", today)
+        .order("id", { ascending: false }) // ⬅ tambahkan ini
+        .returns<DbAbsenRow[]>();
 
       if (!absen || absen.length === 0) {
         setRows([]);
@@ -156,6 +162,7 @@ export default function AbsensiGuru() {
           mapel: mapelNama,
           jadwalMasuk,
           jamMasuk: row.jam_masuk ? row.jam_masuk.slice(0, 5) : null,
+          jamPulang: row.jam_pulang ? row.jam_pulang.slice(0, 5) : null, // ⬅ TAMBAHAN
           lat: row.lat_masuk,
           lng: row.lng_masuk,
         };
@@ -206,6 +213,7 @@ export default function AbsensiGuru() {
               <th className="p-3">Mengajar</th>
               <th className="p-3">Jadwal Masuk</th>
               <th className="p-3">Jam Masuk</th>
+              <th className="p-3">Jam Pulang</th>
               <th className="p-3">Status</th>
               <th className="p-3">Lokasi</th>
             </tr>
@@ -213,7 +221,7 @@ export default function AbsensiGuru() {
           <tbody>
             {filtered.length === 0 ? (
               <tr>
-                <td colSpan={7} className="text-center p-4 text-gray-500">
+                <td colSpan={8} className="text-center p-4 text-gray-500">
                   Tidak ada data ditemukan.
                 </td>
               </tr>
@@ -228,6 +236,7 @@ export default function AbsensiGuru() {
                     <td className="p-3">{item.mapel}</td>
                     <td className="p-3">{item.jadwalMasuk}</td>
                     <td className="p-3">{item.jamMasuk ?? "-"}</td>
+                    <td className="p-3">{item.jamPulang ?? "-"}</td>
                     <td className="p-3">
                       <span className={`px-2 py-1 rounded text-xs ${status === "HADIR" ? "bg-green-100 text-green-700" : status === "TERLAMBAT" ? "bg-yellow-100 text-yellow-700" : "bg-red-100 text-red-700"}`}>{status}</span>
                     </td>

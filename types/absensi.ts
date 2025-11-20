@@ -53,6 +53,7 @@ export interface AbsenGuru {
   mapel: string;
   jadwalMasuk: string;
   jamMasuk: string | null;
+  jamPulang: string | null;
   lat: number | null;
   lng: number | null;
 }
