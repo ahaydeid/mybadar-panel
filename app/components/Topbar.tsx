@@ -5,13 +5,14 @@ import { UserCircle } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface TopbarProps {
-  role: "superadmin" | "admin" | "guru";
+  role: string; 
   name: string;
 }
 
 export default function Topbar({ role, name }: TopbarProps) {
   const router = useRouter();
-  const roleLabel = role.charAt(0).toUpperCase() + role.slice(1);
+
+  const roleLabel = role && typeof role === "string" ? role.charAt(0).toUpperCase() + role.slice(1) : "User";
 
   return (
     <header className="w-full h-14 bg-white border-b border-gray-200 flex items-center justify-between px-6 sticky top-0 z-20">

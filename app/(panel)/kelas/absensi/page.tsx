@@ -58,7 +58,7 @@ export default function AbsensiSiswaPage() {
       {/* LIST CARD KELAS */}
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
         {kelasList.map((k) => (
-          <div key={k.id} className="p-5 bg-gray-50 rounded-sm shadow border hover:shadow-md transition cursor-pointer" onClick={() => router.push(`/absensi/siswa/${k.id}`)}>
+          <div key={k.id} className="p-5 bg-gray-50 rounded-sm shadow border hover:shadow-md transition cursor-pointer" onClick={() => router.push(`/kelas/absensi/${k.id}`)}>
             <h2 className="text-2xl font-bold mb-1">{k.nama_rombel}</h2>
             <p className="text-gray-600">Wali kelas: {k.wali_nama ?? "—"}</p>
           </div>

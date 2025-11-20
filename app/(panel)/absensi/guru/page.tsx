@@ -24,7 +24,7 @@ export default function RekapAbsensiGuruPage() {
 
         <div className="flex gap-3">
           <button className="px-4 py-2 bg-amber-400 rounded-lg flex items-center gap-2">
-            <CalendarPlus className="w-5 h-5" /> Tambah Absen Lampau
+            <CalendarPlus className="w-5 h-5" /> Tambah Absen Manual
           </button>
 
           <button className="px-4 py-2 bg-emerald-600 text-white rounded-lg flex items-center gap-2" onClick={exportAbsensi}>
