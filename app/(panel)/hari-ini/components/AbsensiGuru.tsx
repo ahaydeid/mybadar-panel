@@ -212,8 +212,8 @@ export default function AbsensiGuru() {
               <th className="p-3">Nama</th>
               <th className="p-3">Mengajar</th>
               <th className="p-3">Jadwal Masuk</th>
-              <th className="p-3">Jam Masuk</th>
-              <th className="p-3">Jam Pulang</th>
+              <th className="p-3">Absen Masuk</th>
+              <th className="p-3">Absen Pulang</th>
               <th className="p-3">Status</th>
               <th className="p-3">Lokasi</th>
             </tr>
